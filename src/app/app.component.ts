@@ -5,7 +5,6 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatIconRegistry } from '@angular/material/icon';
 import { MatListModule } from '@angular/material/list';
-import { MatBadgeModule } from '@angular/material/badge';
 import { MatMenuModule } from '@angular/material/menu';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatSidenavModule } from '@angular/material/sidenav';
@@ -41,7 +40,6 @@ import type { ApiUser } from './core/types';
     MatIconModule,
     MatSidenavModule,
     MatListModule,
-    MatBadgeModule,
     MatMenuModule,
     MatProgressBarModule,
     MatTooltipModule,

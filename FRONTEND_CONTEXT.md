@@ -11,9 +11,9 @@ This document is the canonical reference for frontend-backend integration during
 
 ## Local Dev
 - Run frontend: `npm run start` (Angular dev server on `http://localhost:4200`)
-- Frontend calls the backend using a relative API base URL: `/api`
-  - Dev server proxy: `frontend/proxy.conf.json` proxies `/api` -> `http://localhost:8000`
-  - Docker/NGINX: `frontend/nginx.conf` proxies `/api` -> `http://backend:8000/api/`
+- API base URL is injected at build time via `API_BASE_URL` (Docker build arg).
+  - Default fallback (local): `http://localhost:8001/api`
+  - Production builds set the base in `.github/workflows/release-deploy.yml`
 
 ## Demo Automation
 - `frontend/scripts/demo-run.ts` seeds demo users/data, captures Playwright screenshots, and writes `frontend/docs/USAGE_GUIDE.md`.

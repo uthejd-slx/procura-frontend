@@ -1,0 +1,118 @@
+name: Release Deploy
+
+on:
+  release:
+    types: [published]
+
+env:
+  API_BASE_URL: http://128.199.25.59:8001
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Build and push image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: true
+          tags: |
+            ${{ secrets.DOCKERHUB_USERNAME }}/procura-frontend:${{ github.ref_name }}
+            ${{ secrets.DOCKERHUB_USERNAME }}/procura-frontend:latest
+          build-args: |
+            API_BASE_URL=${{ env.API_BASE_URL }}
+
+      - name: Ensure deploy directory
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.PROD_SERVER_IP }}
+          username: ${{ secrets.PROD_SERVER_SSH_USER }}
+          key: ${{ secrets.PROD_SERVER_SSH_KEY }}
+          passphrase: ${{ secrets.PROD_SERVER_SSH_PASSPHRASE }}
+          port: ${{ secrets.PROD_SERVER_SSH_PORT }}
+          script: |
+            mkdir -p /home/ubuntu/procura_frontend
+
+      - name: Upload compose files
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.PROD_SERVER_IP }}
+          username: ${{ secrets.PROD_SERVER_SSH_USER }}
+          key: ${{ secrets.PROD_SERVER_SSH_KEY }}
+          passphrase: ${{ secrets.PROD_SERVER_SSH_PASSPHRASE }}
+          port: ${{ secrets.PROD_SERVER_SSH_PORT }}
+          source: "docker-compose.prod.yml,.env.prod"
+          target: "/home/ubuntu/procura_frontend"
+
+      - name: Deploy
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.PROD_SERVER_IP }}
+          username: ${{ secrets.PROD_SERVER_SSH_USER }}
+          key: ${{ secrets.PROD_SERVER_SSH_KEY }}
+          passphrase: ${{ secrets.PROD_SERVER_SSH_PASSPHRASE }}
+          port: ${{ secrets.PROD_SERVER_SSH_PORT }}
+          script: |
+            set -euo pipefail
+            mkdir -p /home/ubuntu/procura_frontend
+            cd /home/ubuntu/procura_frontend
+
+            PREV_TAG=""
+            if [ -f .last_deploy_tag ]; then
+              PREV_TAG=$(cat .last_deploy_tag || true)
+            fi
+
+            if [ -f .env.prod ]; then
+              set -a
+              . ./.env.prod
+              set +a
+            fi
+
+            FRONTEND_PORT="${FRONTEND_PORT:-80}"
+            if ss -ltn | grep -q ":${FRONTEND_PORT} "; then
+              if [ "${FRONTEND_PORT}" = "80" ]; then
+                FRONTEND_PORT=8080
+              else
+                echo "Port ${FRONTEND_PORT} is already in use."
+                exit 1
+              fi
+            fi
+            if ss -ltn | grep -q ":${FRONTEND_PORT} "; then
+              echo "Port ${FRONTEND_PORT} is already in use."
+              exit 1
+            fi
+
+            export DOCKERHUB_USERNAME="${{ secrets.DOCKERHUB_USERNAME }}"
+            export IMAGE_TAG="${{ github.ref_name }}"
+
+            docker compose -f docker-compose.prod.yml pull web
+            docker compose -f docker-compose.prod.yml up -d web
+            sleep 3
+
+            if curl --fail "http://localhost:${FRONTEND_PORT}/" >/dev/null; then
+              echo "${IMAGE_TAG}" > .last_deploy_tag || echo "${IMAGE_TAG}" | sudo tee .last_deploy_tag >/dev/null
+              exit 0
+            fi
+
+            if [ -n "$PREV_TAG" ]; then
+              export IMAGE_TAG="$PREV_TAG"
+              docker compose -f docker-compose.prod.yml pull web
+              docker compose -f docker-compose.prod.yml up -d web
+              sleep 3
+              curl --fail "http://localhost:${FRONTEND_PORT}/" >/dev/null
+            fi
+
+            exit 1
