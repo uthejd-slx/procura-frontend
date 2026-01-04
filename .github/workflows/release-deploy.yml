@@ -6,6 +6,7 @@ on:
 
 env:
   API_BASE_URL: http://128.199.25.59:8001
+  DEPLOY_PATH: /home/ubuntu/procura_frontend
 
 jobs:
   build-and-deploy:
@@ -44,7 +45,11 @@ jobs:
           passphrase: ${{ secrets.PROD_SERVER_SSH_PASSPHRASE }}
           port: ${{ secrets.PROD_SERVER_SSH_PORT }}
           script: |
-            mkdir -p "$HOME/procura_frontend"
+            DEPLOY_PATH="${DEPLOY_PATH:-/home/ubuntu/procura_frontend}"
+            if ! mkdir -p "$DEPLOY_PATH"; then
+              sudo mkdir -p "$DEPLOY_PATH"
+              sudo chown -R "$USER":"$USER" "$DEPLOY_PATH"
+            fi
 
       - name: Upload compose files
         uses: appleboy/scp-action@v0.1.7
@@ -55,7 +60,7 @@ jobs:
           passphrase: ${{ secrets.PROD_SERVER_SSH_PASSPHRASE }}
           port: ${{ secrets.PROD_SERVER_SSH_PORT }}
           source: "docker-compose.prod.yml,.env.prod"
-          target: "~/procura_frontend"
+          target: "/home/ubuntu/procura_frontend"
 
       - name: Deploy
         uses: appleboy/ssh-action@v1.0.3
@@ -67,8 +72,12 @@ jobs:
           port: ${{ secrets.PROD_SERVER_SSH_PORT }}
           script: |
             set -euo pipefail
-            mkdir -p "$HOME/procura_frontend"
-            cd "$HOME/procura_frontend"
+            DEPLOY_PATH="${DEPLOY_PATH:-/home/ubuntu/procura_frontend}"
+            if ! mkdir -p "$DEPLOY_PATH"; then
+              sudo mkdir -p "$DEPLOY_PATH"
+              sudo chown -R "$USER":"$USER" "$DEPLOY_PATH"
+            fi
+            cd "$DEPLOY_PATH"
 
             PREV_TAG=""
             if [ -f .last_deploy_tag ]; then
