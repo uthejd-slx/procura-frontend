@@ -8,6 +8,7 @@ Release deployments run from GitHub Release events (not on push). The workflow b
    `sudo mkdir -p /home/ubuntu/procura_frontend`
 2. Ensure the deploy user owns the directory:
    `sudo chown -R $USER:$USER /home/ubuntu/procura_frontend`
+3. Make sure `/tmp` is writable (the workflow uploads compose files there before moving them into place).
 2. Ensure Docker + Docker Compose are installed.
 3. Decide which port to expose:
    - Preferred: `80` if available.
@@ -20,6 +21,7 @@ Release deployments run from GitHub Release events (not on push). The workflow b
 Create a GitHub Release (tag) to trigger the workflow:
 - Image tags: `${DOCKERHUB_USERNAME}/procura-frontend:${TAG}` and `latest`
 - Deploy path: `/home/ubuntu/procura_frontend`
+- Upload path: `/tmp/procura_frontend_upload` (workflow staging)
 - Health check: `curl --fail http://localhost:${FRONTEND_PORT}/`
 - On success, the tag is written to `.last_deploy_tag`
 - On failure, it rolls back to the previous tag if available
