@@ -14,6 +14,7 @@ This document is the canonical reference for frontend-backend integration during
 - API base URL is injected at build time via `API_BASE_URL` (Docker build arg).
   - Default fallback (local): `http://localhost:8001/api`
   - Production builds set the base in `.github/workflows/release-deploy.yml`
+- Docker image serves the Angular `dist/frontend/browser` output (application builder) via nginx.
 
 ## Demo Automation
 - `frontend/scripts/demo-run.ts` seeds demo users/data, captures Playwright screenshots, and writes `frontend/docs/USAGE_GUIDE.md`.
