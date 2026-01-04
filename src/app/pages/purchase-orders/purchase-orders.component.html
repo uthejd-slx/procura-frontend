@@ -1,0 +1,140 @@
+    <div class="pt-page">
+      <div class="pt-header">
+        <div>
+          <div class="pt-title" data-tutorial="purchase-orders">Purchase Orders</div>
+          <div class="pt-muted">Track orders, vendors, and receiving status.</div>
+        </div>
+        <div class="pt-actions">
+          <button mat-stroked-button color="primary" (click)="reload()">
+            <mat-icon>refresh</mat-icon>
+            Refresh
+          </button>
+        </div>
+      </div>
+
+      <div class="pt-grid">
+        <mat-card class="pt-panel">
+          <mat-card-title>Order list</mat-card-title>
+          <mat-card-content>
+            <form class="pt-filters" [formGroup]="filterForm">
+              <mat-form-field appearance="outline">
+                <mat-select placeholder="Status" formControlName="status" multiple>
+                  <mat-option *ngFor="let s of statuses" [value]="s">{{ s }}</mat-option>
+                </mat-select>
+              </mat-form-field>
+              <mat-form-field appearance="outline">
+                <mat-icon matPrefix>search</mat-icon>
+                <input matInput placeholder="Search" formControlName="search" />
+              </mat-form-field>
+              <mat-form-field appearance="outline">
+                <input matInput placeholder="Vendor" formControlName="vendor" />
+              </mat-form-field>
+              <mat-form-field appearance="outline">
+                <input matInput placeholder="Category" formControlName="category" />
+              </mat-form-field>
+              <mat-form-field appearance="outline">
+                <input matInput placeholder="BOM ID" formControlName="bom_id" />
+              </mat-form-field>
+              <mat-form-field appearance="outline">
+                <input matInput type="date" placeholder="Created from" formControlName="created_from" />
+              </mat-form-field>
+              <mat-form-field appearance="outline">
+                <input matInput type="date" placeholder="Created to" formControlName="created_to" />
+              </mat-form-field>
+              <mat-form-field appearance="outline">
+                <input matInput type="date" placeholder="Updated from" formControlName="updated_from" />
+              </mat-form-field>
+              <mat-form-field appearance="outline">
+                <input matInput type="date" placeholder="Updated to" formControlName="updated_to" />
+              </mat-form-field>
+              <div class="pt-filter-actions">
+                <button mat-raised-button color="primary" type="button" (click)="applyFilters()">Apply</button>
+                <button mat-button color="primary" type="button" (click)="clearFilters()">Clear</button>
+              </div>
+            </form>
+
+            <div *ngIf="loading()" class="pt-muted">No data available</div>
+
+            <table mat-table [dataSource]="orders()" *ngIf="!loading()" class="pt-table">
+              <ng-container matColumnDef="po_number">
+                <th mat-header-cell *matHeaderCellDef>PO</th>
+                <td mat-cell *matCellDef="let po">
+                  <div class="pt-strong">{{ po.po_number || 'PO-' + po.id }}</div>
+                  <div class="pt-muted">
+                    <a *ngIf="po.bom" class="pt-link" [routerLink]="['/boms', po.bom]">BOM {{ po.bom }}</a>
+                    <span *ngIf="!po.bom">BOM ?</span>
+                  </div>
+                </td>
+              </ng-container>
+
+              <ng-container matColumnDef="vendor">
+                <th mat-header-cell *matHeaderCellDef>Vendor</th>
+                <td mat-cell *matCellDef="let po">{{ po.vendor_name || '?' }}</td>
+              </ng-container>
+
+              <ng-container matColumnDef="status">
+                <th mat-header-cell *matHeaderCellDef>Status</th>
+                <td mat-cell *matCellDef="let po">{{ po.status }}</td>
+              </ng-container>
+
+              <ng-container matColumnDef="updated">
+                <th mat-header-cell *matHeaderCellDef>Updated</th>
+                <td mat-cell *matCellDef="let po">{{ po.updated_at | date: 'short' }}</td>
+              </ng-container>
+
+              <ng-container matColumnDef="actions">
+                <th mat-header-cell *matHeaderCellDef>Actions</th>
+                <td mat-cell *matCellDef="let po">
+                  <a mat-button color="primary" [routerLink]="['/purchase-orders', po.id]">View</a>
+                </td>
+              </ng-container>
+
+              <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+              <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
+            </table>
+
+            <div *ngIf="!loading() && orders().length === 0" class="pt-muted">No data available</div>
+
+            <div class="pt-pagination" *ngIf="!loading()">
+              <span class="pt-muted">{{ rangeLabel() }}</span>
+              <span style="flex: 1 1 auto"></span>
+              <mat-form-field appearance="outline" class="pt-page-size">
+                <mat-select [value]="pageSize()" (selectionChange)="updatePageSize($event.value)">
+                  <mat-option [value]="10">10</mat-option>
+                  <mat-option [value]="25">25</mat-option>
+                  <mat-option [value]="50">50</mat-option>
+                </mat-select>
+              </mat-form-field>
+              <button mat-button color="primary" (click)="prevPage()" [disabled]="!hasPrev()">Prev</button>
+              <button mat-button color="primary" (click)="nextPage()" [disabled]="!hasNext()">Next</button>
+            </div>
+          </mat-card-content>
+        </mat-card>
+
+        <mat-card class="pt-panel">
+          <mat-card-title>New purchase order</mat-card-title>
+          <mat-card-content>
+            <div class="pt-muted" *ngIf="!isProcurement()">Procurement role required to create orders.</div>
+            <form class="pt-form" [formGroup]="createForm" (ngSubmit)="create()">
+              <mat-form-field appearance="outline">
+                <input matInput placeholder="BOM ID" formControlName="bom" />
+              </mat-form-field>
+              <mat-form-field appearance="outline">
+                <input matInput placeholder="PO number (optional)" formControlName="po_number" />
+              </mat-form-field>
+              <mat-form-field appearance="outline">
+                <input matInput placeholder="Vendor" formControlName="vendor_name" />
+              </mat-form-field>
+              <mat-form-field appearance="outline">
+                <input matInput placeholder="Currency" formControlName="currency" />
+              </mat-form-field>
+              <mat-form-field appearance="outline">
+                <textarea matInput rows="4" placeholder="Notes" formControlName="notes"></textarea>
+              </mat-form-field>
+              <button mat-raised-button color="primary" type="submit" [disabled]="!isProcurement()">Create</button>
+            </form>
+          </mat-card-content>
+        </mat-card>
+      </div>
+    </div>
+  

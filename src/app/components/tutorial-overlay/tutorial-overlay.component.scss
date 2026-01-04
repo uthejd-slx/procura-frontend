@@ -1,0 +1,78 @@
+.pt-tutorial {
+  position: fixed;
+  inset: 0;
+  z-index: 1200;
+  pointer-events: none;
+}
+
+.pt-scrim {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  pointer-events: none;
+}
+
+.pt-highlight {
+  position: fixed;
+  border-radius: 14px;
+  border: 2px solid rgba(201, 218, 122, 0.85);
+  box-shadow: 0 0 0 2px rgba(201, 218, 122, 0.25);
+  pointer-events: none;
+  z-index: 2;
+}
+
+.pt-popover {
+  position: fixed;
+  z-index: 3;
+  width: 320px;
+  max-width: calc(100vw - 24px);
+  background: #1f1f1f;
+  border: var(--pt-card-border);
+  border-radius: 18px;
+  padding: 14px 16px 12px;
+  color: rgba(230, 230, 230, 0.92);
+  display: grid;
+  gap: 10px;
+  box-shadow: 0 14px 32px rgba(0, 0, 0, 0.35);
+  pointer-events: auto;
+}
+
+.pt-head {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.pt-title {
+  font-weight: 700;
+  font-size: 16px;
+}
+
+.pt-step {
+  font-size: 12px;
+  opacity: 0.7;
+}
+
+.pt-body {
+  font-size: 13px;
+  line-height: 1.4;
+  opacity: 0.85;
+}
+
+.pt-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.pt-spacer {
+  flex: 1 1 auto;
+}
+
+@media (max-width: 700px) {
+  .pt-popover {
+    width: min(320px, calc(100vw - 24px));
+  }
+}

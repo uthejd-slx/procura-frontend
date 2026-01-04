@@ -1,0 +1,56 @@
+    <mat-card>
+      <mat-card-title data-tutorial="approvals-inbox">Inbox  -  Procurement Approvals</mat-card-title>
+      <mat-card-content>
+        <div class="pt-row" style="margin: 12px 0; gap: 10px; align-items:center">
+          <span class="pt-muted" *ngIf="!loading">{{ approvals.length }} approvals</span>
+          <span style="flex: 1 1 auto"></span>
+          <button mat-stroked-button color="primary" (click)="reload()" [disabled]="loading">
+            <mat-icon>refresh</mat-icon>
+            Refresh
+          </button>
+        </div>
+
+        <div *ngIf="loading" class="pt-row" style="gap:12px; align-items:center">
+          
+          <span>No data available</span>
+        </div>
+
+        <div *ngIf="!loading && approvals.length === 0" class="pt-muted">No approvals assigned to you.</div>
+
+        <table mat-table [dataSource]="approvals" class="pt-table" *ngIf="!loading && approvals.length">
+          <ng-container matColumnDef="approval">
+            <th mat-header-cell *matHeaderCellDef>Approval</th>
+            <td mat-cell *matCellDef="let a">
+              <div class="pt-title">Approval #{{ a.id }}</div>
+              <div class="pt-muted">Request #{{ a.request }}</div>
+            </td>
+          </ng-container>
+
+          <ng-container matColumnDef="decision">
+            <th mat-header-cell *matHeaderCellDef>Decision</th>
+            <td mat-cell *matCellDef="let a">
+              <form [formGroup]="formFor(a.id)" class="pt-row" style="gap: 10px; align-items:center; flex-wrap: wrap" data-tutorial="approvals-action">
+                <mat-form-field appearance="outline" style="min-width: 220px">
+                  <mat-label>Status</mat-label>
+                  <mat-select formControlName="status">
+                    <mat-option value="APPROVED">APPROVED</mat-option>
+                    <mat-option value="NEEDS_CHANGES">NEEDS_CHANGES</mat-option>
+                  </mat-select>
+                </mat-form-field>
+                <mat-form-field appearance="outline" style="min-width: 260px">
+                  <mat-label>Comment (optional)</mat-label>
+                  <input matInput formControlName="comment" />
+                </mat-form-field>
+                <button mat-raised-button color="primary" type="button" (click)="submit(a)" [disabled]="savingId === a.id">
+                  Submit
+                </button>
+              </form>
+            </td>
+          </ng-container>
+
+          <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+          <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
+        </table>
+      </mat-card-content>
+    </mat-card>
+  

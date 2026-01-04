@@ -1,0 +1,28 @@
+<div class="pt-tutorial" *ngIf="isActive()">
+  <div class="pt-scrim"></div>
+  <div class="pt-highlight" *ngIf="hasTarget()" [ngStyle]="highlightStyle()"></div>
+  <mat-card class="pt-popover" [ngStyle]="popoverStyle()">
+    <div class="pt-head">
+    <div class="pt-title">{{ step().title }}</div>
+      <div class="pt-step">Step {{ stepIndex() }} of {{ totalSteps() }}</div>
+    </div>
+    <div class="pt-body">{{ step().description }}</div>
+    <div class="pt-actions">
+      <button mat-button type="button" (click)="skip()">Skip</button>
+      <span class="pt-spacer"></span>
+      <button mat-stroked-button color="primary" type="button" (click)="prev()" [disabled]="stepIndex() === 1">Back</button>
+      <button
+        *ngIf="stepIndex() < totalSteps()"
+        mat-raised-button
+        color="primary"
+        type="button"
+        (click)="next()"
+      >
+        Next
+      </button>
+      <button *ngIf="stepIndex() === totalSteps()" mat-raised-button color="primary" type="button" (click)="finish()">
+        Finish
+      </button>
+    </div>
+  </mat-card>
+</div>

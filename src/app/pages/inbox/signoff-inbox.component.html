@@ -1,0 +1,59 @@
+    <mat-card>
+      <mat-card-title data-tutorial="signoff-inbox">Inbox  -  Signoff</mat-card-title>
+      <mat-card-content>
+        <div class="pt-row" style="margin: 12px 0; gap: 10px; align-items:center">
+          <span class="pt-muted" *ngIf="!loading">{{ items.length }} items</span>
+          <span style="flex: 1 1 auto"></span>
+          <button mat-stroked-button color="primary" (click)="reload()" [disabled]="loading">
+            <mat-icon>refresh</mat-icon>
+            Refresh
+          </button>
+        </div>
+
+        <div *ngIf="loading" class="pt-row" style="gap:12px; align-items:center">
+          
+          <span>No data available</span>
+        </div>
+
+        <div *ngIf="!loading && items.length === 0" class="pt-muted">No signoff items assigned to you.</div>
+
+        <table mat-table [dataSource]="items" class="pt-table" *ngIf="!loading && items.length">
+          <ng-container matColumnDef="item">
+            <th mat-header-cell *matHeaderCellDef>Item</th>
+            <td mat-cell *matCellDef="let i">
+              <div class="pt-title">{{ i.name }}</div>
+              <div class="pt-muted">
+                <a *ngIf="i.bom" class="pt-link" [routerLink]="['/boms', i.bom]">BOM #{{ i.bom }}</a>
+                <span *ngIf="!i.bom">BOM ?</span>
+              </div>
+            </td>
+          </ng-container>
+
+          <ng-container matColumnDef="decision">
+            <th mat-header-cell *matHeaderCellDef>Decision</th>
+            <td mat-cell *matCellDef="let i">
+              <form [formGroup]="formFor(i.id)" class="pt-row" style="gap: 10px; align-items:center; flex-wrap: wrap">
+                <mat-form-field appearance="outline" style="min-width: 220px">
+                  <mat-label>Status</mat-label>
+                  <mat-select formControlName="status">
+                    <mat-option value="APPROVED">APPROVED</mat-option>
+                    <mat-option value="NEEDS_CHANGES">NEEDS_CHANGES</mat-option>
+                  </mat-select>
+                </mat-form-field>
+                <mat-form-field appearance="outline" style="min-width: 260px">
+                  <mat-label>Comment (optional)</mat-label>
+                  <input matInput formControlName="comment" />
+                </mat-form-field>
+                <button mat-raised-button color="primary" type="button" (click)="submit(i)" [disabled]="savingId === i.id">
+                  Submit
+                </button>
+              </form>
+            </td>
+          </ng-container>
+
+          <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+          <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
+        </table>
+      </mat-card-content>
+    </mat-card>
+  

@@ -1,0 +1,18 @@
+    <div class="auth-page">
+      <div class="auth-shell">
+        <div class="pt-loading-bar" *ngIf="loading.isLoading()">
+          <mat-progress-bar mode="indeterminate" color="primary"></mat-progress-bar>
+        </div>
+        <div class="auth-left">
+          <a class="auth-brand" routerLink="/">
+            <mat-icon class="auth-brand-mark" svgIcon="procura_mark"></mat-icon>
+            <span class="auth-brand-text">{{ brand }}</span>
+          </a>
+          <h1 class="auth-headline">{{ headline }}</h1>
+          <p class="auth-subhead" *ngIf="subhead">{{ subhead }}</p>
+          <ng-content></ng-content>
+        </div>
+        <div class="auth-right" aria-hidden="true"></div>
+      </div>
+    </div>
+  

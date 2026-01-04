@@ -1,0 +1,62 @@
+    <div class="pt-dialog">
+      <div class="pt-dialog-head" mat-dialog-title>
+        <div class="pt-title">{{ template.name }}</div>
+        <span style="flex: 1 1 auto"></span>
+        <button mat-icon-button (click)="close()" aria-label="Close template view">
+          <mat-icon>close</mat-icon>
+        </button>
+      </div>
+      <div mat-dialog-content class="pt-dialog-content">
+        <div class="pt-muted" *ngIf="template.description">{{ template.description }}</div>
+
+        <div class="pt-section" *ngIf="bomFields.length">
+          <div class="pt-h">BOM fields</div>
+          <div class="pt-table-wrap">
+            <table class="pt-table pt-table-compact">
+              <thead>
+                <tr>
+                  <th *ngFor="let f of bomFields">{{ f.label || f.key }}</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngIf="bomSampleRow().length">
+                  <td *ngFor="let sample of bomSampleRow(); let i = index" class="pt-muted">
+                    <ng-container *ngIf="sampleLink(bomFields[i], sample) as link; else bomCellText">
+                      <a class="pt-link" [href]="link" target="_blank" rel="noopener">{{ sample }}</a>
+                    </ng-container>
+                    <ng-template #bomCellText>{{ sample }}</ng-template>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="pt-section" *ngIf="itemFields.length">
+          <div class="pt-h">Item fields</div>
+          <div class="pt-table-wrap">
+            <table class="pt-table pt-table-compact">
+              <thead>
+                <tr>
+                  <th *ngFor="let f of itemFields">{{ f.label || f.key }}</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let row of itemSampleRows()">
+                  <td *ngFor="let sample of row; let i = index" class="pt-muted">
+                    <ng-container *ngIf="sampleLink(itemFields[i], sample) as link; else itemCellText">
+                      <a class="pt-link" [href]="link" target="_blank" rel="noopener">{{ sample }}</a>
+                    </ng-container>
+                    <ng-template #itemCellText>{{ sample }}</ng-template>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div *ngIf="!bomFields.length && !itemFields.length" class="pt-muted">
+          No schema fields are defined for this template.
+        </div>
+      </div>
+    </div>

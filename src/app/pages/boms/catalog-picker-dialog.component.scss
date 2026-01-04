@@ -1,0 +1,83 @@
+.pt-dialog {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  height: 100%;
+  font-size: 13px;
+  max-height: 100%;
+}
+
+.pt-dialog-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 0 6px;
+  border-bottom: 1px solid rgba(201, 218, 122, 0.12);
+}
+
+.pt-dialog-title {
+  font-weight: 700;
+  font-size: 15px;
+}
+
+.pt-dialog-content {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  overflow: auto;
+}
+
+.pt-search {
+  width: 100%;
+}
+
+.pt-list {
+  display: grid;
+  gap: 10px;
+}
+
+.pt-item {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  padding: 10px 12px;
+  border: var(--pt-card-border);
+  border-radius: 14px;
+  background: var(--pt-card-bg);
+}
+
+.pt-item-main {
+  flex: 1 1 auto;
+  display: grid;
+  gap: 4px;
+}
+
+.pt-item-title {
+  font-weight: 600;
+}
+
+.pt-item-meta {
+  opacity: 0.75;
+  font-size: 12px;
+}
+
+.pt-item-desc {
+  opacity: 0.85;
+}
+
+.pt-empty {
+  opacity: 0.75;
+  text-align: center;
+  padding: 12px 0;
+}
+
+.pt-link {
+  color: rgba(201, 218, 122, 0.95);
+  text-decoration: none;
+  font-weight: 600;
+  width: fit-content;
+}
+
+.pt-link:hover {
+  text-decoration: underline;
+}

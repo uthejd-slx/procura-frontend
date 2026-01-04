@@ -1,0 +1,180 @@
+    <div class="dash">
+      <div class="dash-head">
+        <div>
+          <div class="dash-title" data-tutorial="home-dashboard">Home</div>
+          <div class="dash-sub" *ngIf="userEmail()">Signed in as {{ userEmail() }}</div>
+        </div>
+        <div class="dash-actions">
+          <a mat-raised-button color="primary" routerLink="/boms/new" data-tutorial="new-bom">
+            <mat-icon>add</mat-icon>
+            New BOM
+          </a>
+        </div>
+      </div>
+
+      <mat-tab-group class="dash-tabs">
+        <mat-tab label="Widgets">
+          <div class="dash-section">
+            <div class="dash-category">
+              <div class="dash-category-title">Workflow</div>
+              <div class="dash-grid">
+                <a class="tile" routerLink="/boms">
+                  <div class="tile-ic"><mat-icon>list_alt</mat-icon></div>
+                  <div class="tile-t">BOMs</div>
+                  <div class="tile-d">View drafts, statuses, and requests.</div>
+                </a>
+                <a class="tile" routerLink="/bom-templates">
+                  <div class="tile-ic"><mat-icon>view_quilt</mat-icon></div>
+                  <div class="tile-t">Templates</div>
+                  <div class="tile-d">Manage global + your templates.</div>
+                </a>
+                <a class="tile" routerLink="/inbox/signoff">
+                  <div class="tile-ic"><mat-icon>task_alt</mat-icon></div>
+                  <div class="tile-t">Signoff Inbox</div>
+                  <div class="tile-d">Items assigned to you for signoff.</div>
+                </a>
+                <a class="tile" *ngIf="canApprove()" routerLink="/inbox/approvals">
+                  <div class="tile-ic"><mat-icon>fact_check</mat-icon></div>
+                  <div class="tile-t">Approvals Inbox</div>
+                  <div class="tile-d">Procurement approvals assigned to you.</div>
+                </a>
+              </div>
+            </div>
+
+            <div class="dash-category">
+              <div class="dash-category-title">Catalog</div>
+              <div class="dash-grid">
+                <a class="tile" routerLink="/catalog">
+                  <div class="tile-ic"><mat-icon>inventory_2</mat-icon></div>
+                  <div class="tile-t">Catalog</div>
+                  <div class="tile-d">Reusable items for requests and orders.</div>
+                </a>
+              </div>
+            </div>
+
+            <div class="dash-category" *ngIf="canProcure()">
+              <div class="dash-category-title">Procurement</div>
+              <div class="dash-grid">
+                <a class="tile" routerLink="/procurement">
+                  <div class="tile-ic"><mat-icon>local_shipping</mat-icon></div>
+                  <div class="tile-t">Procurement</div>
+                  <div class="tile-d">Mark ordered and record receipts.</div>
+                </a>
+                <a class="tile" routerLink="/purchase-orders">
+                  <div class="tile-ic"><mat-icon>receipt_long</mat-icon></div>
+                  <div class="tile-t">Purchase Orders</div>
+                  <div class="tile-d">Track order status and receiving.</div>
+                </a>
+              </div>
+            </div>
+
+            <div class="dash-category" *ngIf="canProcure()">
+              <div class="dash-category-title">Assets & Transfers</div>
+              <div class="dash-grid">
+                <a class="tile" routerLink="/assets">
+                  <div class="tile-ic"><mat-icon>inventory</mat-icon></div>
+                  <div class="tile-t">Assets</div>
+                  <div class="tile-d">Track auto-created received assets.</div>
+                </a>
+                <a class="tile" routerLink="/partners">
+                  <div class="tile-ic"><mat-icon>handshake</mat-icon></div>
+                  <div class="tile-t">Partners</div>
+                  <div class="tile-d">Manage partner companies.</div>
+                </a>
+                <a class="tile" routerLink="/transfers">
+                  <div class="tile-ic"><mat-icon>swap_horiz</mat-icon></div>
+                  <div class="tile-t">Transfers</div>
+                  <div class="tile-d">Send assets to partners.</div>
+                </a>
+              </div>
+            </div>
+
+            <div class="dash-category" *ngIf="canProcure()">
+              <div class="dash-category-title">Finance</div>
+              <div class="dash-grid">
+                <a class="tile" routerLink="/bills">
+                  <div class="tile-ic"><mat-icon>receipt</mat-icon></div>
+                  <div class="tile-t">Bills</div>
+                  <div class="tile-d">Upload and track bills.</div>
+                </a>
+              </div>
+            </div>
+
+            <div class="dash-category">
+              <div class="dash-category-title">Files</div>
+              <div class="dash-grid">
+                <a class="tile" routerLink="/attachments">
+                  <div class="tile-ic"><mat-icon>attach_file</mat-icon></div>
+                  <div class="tile-t">Attachments</div>
+                  <div class="tile-d">Upload invoices and bills.</div>
+                </a>
+              </div>
+            </div>
+
+            <div class="dash-category">
+              <div class="dash-category-title">History & Audit</div>
+              <div class="dash-grid">
+                <a class="tile" routerLink="/search">
+                  <div class="tile-ic"><mat-icon>manage_search</mat-icon></div>
+                  <div class="tile-t">Search History</div>
+                  <div class="tile-d">Review saved search activity.</div>
+                </a>
+                <a class="tile" routerLink="/audit">
+                  <div class="tile-ic"><mat-icon>history</mat-icon></div>
+                  <div class="tile-t">Audit Log</div>
+                  <div class="tile-d">Review activity and workflow events.</div>
+                </a>
+              </div>
+            </div>
+
+            <div class="dash-category">
+              <div class="dash-category-title">Account</div>
+              <div class="dash-grid">
+                <button class="tile tile-button" type="button" (click)="openNotifications()">
+                  <div class="tile-ic"><mat-icon>notifications</mat-icon></div>
+                  <div class="tile-t">Notifications</div>
+                  <div class="tile-d">Mark read and follow links.</div>
+                </button>
+                <a class="tile" routerLink="/profile">
+                  <div class="tile-ic"><mat-icon>person</mat-icon></div>
+                  <div class="tile-t">Profile</div>
+                  <div class="tile-d">Manage your profile details.</div>
+                </a>
+              </div>
+            </div>
+
+            <div class="dash-category" *ngIf="isAdmin()">
+              <div class="dash-category-title">Admin</div>
+              <div class="dash-grid">
+                <a class="tile" routerLink="/admin/users">
+                  <div class="tile-ic"><mat-icon>admin_panel_settings</mat-icon></div>
+                  <div class="tile-t">Admin Users</div>
+                  <div class="tile-d">Manage roles and activation.</div>
+                </a>
+              </div>
+            </div>
+          </div>
+        </mat-tab>
+
+        <mat-tab label="Recent BOMs">
+          <mat-card class="dash-card">
+            <mat-card-title>Recent BOMs</mat-card-title>
+            <mat-card-content>
+              <div *ngIf="loadingBoms" class="dash-load">
+                <span>No data available</span>
+              </div>
+              <div *ngIf="!loadingBoms && recentBoms.length === 0" class="dash-muted">No BOMs yet.</div>
+              <div *ngFor="let b of recentBoms" class="dash-row">
+                <a class="dash-link" [routerLink]="['/boms', b.id]">#{{ b.id }}  -  {{ b.title }}</a>
+                <span class="dash-pill">{{ b.status }}</span>
+                <span class="dash-muted">{{ b.updated_at | date: 'short' }}</span>
+              </div>
+              <div class="dash-foot">
+                <a mat-button color="primary" routerLink="/boms">View all</a>
+              </div>
+            </mat-card-content>
+          </mat-card>
+        </mat-tab>
+      </mat-tab-group>
+    </div>
+  

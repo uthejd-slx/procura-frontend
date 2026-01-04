@@ -1,0 +1,190 @@
+<ng-container *ngIf="!isAuthRoute(); else authLayout">
+  <mat-toolbar class="app-toolbar" color="primary">
+    <span class="app-brand" routerLink="/">
+      <mat-icon class="app-brand-mark" svgIcon="procura_mark"></mat-icon>
+      <span class="app-brand-text">procura</span>
+    </span>
+    <span style="flex: 1 1 auto"></span>
+    <button
+      *ngIf="isAuthenticated()"
+      mat-icon-button
+      class="app-notification-button"
+      data-tutorial="notifications"
+      (click)="openNotifications()"
+      aria-label="Notifications"
+      matTooltip="Notifications"
+      matTooltipPosition="below"
+    >
+      <span class="app-notification-ring">
+        <span class="app-notification-icon-wrap">
+          <mat-icon class="app-notification-icon">notifications</mat-icon>
+          <span class="app-notification-badge" *ngIf="unreadCount() > 0">
+            {{ unreadCount() }}
+          </span>
+        </span>
+      </span>
+    </button>
+    <button *ngIf="isAuthenticated()" mat-icon-button class="app-user-button" [matMenuTriggerFor]="userMenu" aria-label="User menu">
+      <img *ngIf="userAvatarSrc(); else userIcon" [src]="userAvatarSrc()" alt="User avatar" class="app-user-avatar" />
+      <ng-template #userIcon>
+        <mat-icon class="app-user-icon" svgIcon="pt_account"></mat-icon>
+      </ng-template>
+    </button>
+  </mat-toolbar>
+
+  <main class="app-main">
+    <div class="app-surface">
+      <div class="pt-loading-bar" *ngIf="isLoading()">
+        <mat-progress-bar mode="indeterminate" color="primary"></mat-progress-bar>
+      </div>
+      <mat-sidenav-container class="app-sidenav-container">
+      <mat-sidenav class="app-sidenav" mode="side" opened>
+        <mat-nav-list>
+          <div class="app-sidenav-group">
+            <a mat-list-item routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }"
+              matTooltip="Home" matTooltipPosition="right" aria-label="Home">
+              <mat-icon matListItemIcon svgIcon="pt_home"></mat-icon>
+            </a>
+            <a mat-list-item routerLink="/boms" routerLinkActive="active" matTooltip="BOMs" matTooltipPosition="right"
+              aria-label="BOMs">
+              <mat-icon matListItemIcon>list_alt</mat-icon>
+            </a>
+            <a mat-list-item routerLink="/bom-templates" routerLinkActive="active" matTooltip="Templates"
+              matTooltipPosition="right" aria-label="Templates">
+              <mat-icon matListItemIcon>view_quilt</mat-icon>
+            </a>
+            <a mat-list-item routerLink="/inbox/signoff" routerLinkActive="active" matTooltip="Signoff Inbox"
+              matTooltipPosition="right" aria-label="Signoff Inbox">
+              <mat-icon matListItemIcon>task_alt</mat-icon>
+            </a>
+            <a *ngIf="canApprove()" mat-list-item routerLink="/inbox/approvals" routerLinkActive="active"
+              matTooltip="Approvals Inbox" matTooltipPosition="right" aria-label="Approvals Inbox">
+              <mat-icon matListItemIcon>fact_check</mat-icon>
+            </a>
+          </div>
+          <div class="app-sidenav-divider"></div>
+          <div class="app-sidenav-group">
+            <a *ngIf="canProcure()" mat-list-item routerLink="/procurement" routerLinkActive="active"
+              matTooltip="Procurement" matTooltipPosition="right" aria-label="Procurement">
+              <mat-icon matListItemIcon>local_shipping</mat-icon>
+            </a>
+            <a *ngIf="canProcure()" mat-list-item routerLink="/purchase-orders" routerLinkActive="active"
+              matTooltip="Purchase Orders" matTooltipPosition="right" aria-label="Purchase Orders">
+              <mat-icon matListItemIcon>receipt_long</mat-icon>
+            </a>
+            <a mat-list-item routerLink="/catalog" routerLinkActive="active" matTooltip="Catalog"
+              matTooltipPosition="right" aria-label="Catalog">
+              <mat-icon matListItemIcon>inventory_2</mat-icon>
+            </a>
+          </div>
+          <div class="app-sidenav-divider"></div>
+          <div class="app-sidenav-group">
+            <button mat-list-item type="button" [matMenuTriggerFor]="navMoreMenu" matTooltip="More"
+              matTooltipPosition="right" aria-label="More">
+              <mat-icon matListItemIcon>more_horiz</mat-icon>
+            </button>
+          </div>
+          <div class="app-sidenav-divider"></div>
+          <div class="app-sidenav-group">
+            <a mat-list-item routerLink="/help" routerLinkActive="active" matTooltip="Help guide"
+              matTooltipPosition="right" aria-label="Help guide">
+              <mat-icon matListItemIcon>help_outline</mat-icon>
+            </a>
+          </div>
+        </mat-nav-list>
+      </mat-sidenav>
+
+        <mat-sidenav-content class="app-content">
+          <router-outlet></router-outlet>
+        </mat-sidenav-content>
+      </mat-sidenav-container>
+    </div>
+  </main>
+
+  <button
+    *ngIf="isAuthenticated()"
+    class="pt-feedback-fab"
+    mat-raised-button
+    color="primary"
+    (click)="openFeedback()"
+    data-tutorial="feedback"
+    aria-label="Send feedback"
+  >
+    <mat-icon>feedback</mat-icon>
+    <span>Feedback</span>
+  </button>
+</ng-container>
+
+<ng-template #authLayout>
+  <router-outlet></router-outlet>
+</ng-template>
+
+<mat-menu #userMenu="matMenu">
+  <button mat-menu-item routerLink="/profile">
+    <mat-icon class="menu-icon">person</mat-icon>
+    <span>Profile</span>
+  </button>
+  <button *ngIf="isAdmin()" mat-menu-item routerLink="/admin/users">
+    <mat-icon class="menu-icon">admin_panel_settings</mat-icon>
+    <span>Admin users</span>
+  </button>
+  <button *ngIf="isAdmin()" mat-menu-item (click)="openFeedback()" data-tutorial="feedback-admin">
+    <mat-icon class="menu-icon">feedback</mat-icon>
+    <span>Feedback admin</span>
+  </button>
+  <mat-divider *ngIf="canProcure()"></mat-divider>
+  <button mat-menu-item routerLink="/help">
+    <mat-icon class="menu-icon">help</mat-icon>
+    <span>Help guide</span>
+  </button>
+  <button mat-menu-item (click)="startTutorial()">
+    <mat-icon class="menu-icon">help_outline</mat-icon>
+    <span>Help - Start tutorial</span>
+  </button>
+  <button mat-menu-item (click)="logout()">
+    <mat-icon class="menu-icon">logout</mat-icon>
+    <span>Logout</span>
+  </button>
+</mat-menu>
+
+<app-notification-panel></app-notification-panel>
+<app-tutorial-overlay></app-tutorial-overlay>
+
+<mat-menu #navMoreMenu="matMenu">
+  <button *ngIf="canProcure()" mat-menu-item routerLink="/assets">
+    <mat-icon>inventory</mat-icon>
+    <span>Assets</span>
+  </button>
+  <button *ngIf="canProcure()" mat-menu-item routerLink="/partners">
+    <mat-icon>handshake</mat-icon>
+    <span>Partners</span>
+  </button>
+  <button *ngIf="canProcure()" mat-menu-item routerLink="/transfers">
+    <mat-icon>swap_horiz</mat-icon>
+    <span>Transfers</span>
+  </button>
+  <mat-divider></mat-divider>
+  <button *ngIf="canProcure()" mat-menu-item routerLink="/bills">
+    <mat-icon>receipt</mat-icon>
+    <span>Bills</span>
+  </button>
+  <button mat-menu-item routerLink="/attachments">
+    <mat-icon>attach_file</mat-icon>
+    <span>Attachments</span>
+  </button>
+  <mat-divider></mat-divider>
+  <button mat-menu-item routerLink="/search">
+    <mat-icon>manage_search</mat-icon>
+    <span>Search history</span>
+  </button>
+  <button mat-menu-item routerLink="/audit">
+    <mat-icon>history</mat-icon>
+    <span>Audit log</span>
+  </button>
+  <mat-divider></mat-divider>
+  <button mat-menu-item routerLink="/help">
+    <mat-icon>help</mat-icon>
+    <span>Help guide</span>
+  </button>
+</mat-menu>
+

@@ -1,0 +1,76 @@
+    <mat-card>
+      <mat-card-title>New BOM</mat-card-title>
+      <mat-card-content>
+        <p class="pt-muted" style="margin-top: 6px">
+          Create a draft purchase request. You can add items and request signoff/approval later.
+        </p>
+
+        <div *ngIf="draftCapError" class="pt-alert">
+          <div style="font-weight: 600; margin-bottom: 6px">Draft limit reached</div>
+          <div class="pt-muted" style="margin-bottom: 10px">{{ draftCapError }}</div>
+          <a mat-button color="primary" routerLink="/boms" [queryParams]="{ status: 'DRAFT' }">Go to drafts</a>
+        </div>
+
+        <form [formGroup]="form" (ngSubmit)="submit()" class="pt-form">
+          <mat-form-field appearance="outline">
+            <mat-label>Template (optional)</mat-label>
+            <mat-select formControlName="template">
+              <mat-option [value]="null">None</mat-option>
+              <mat-option *ngFor="let t of templates" [value]="t.id">
+                <div class="pt-option">
+                  <div class="pt-option-title">
+                    {{ t.name }}
+                    <span class="pt-muted" *ngIf="isGlobalTemplate(t)"> - Global</span>
+                  </div>
+                  <div class="pt-option-sub" *ngIf="t.description">{{ t.description }}</div>
+                </div>
+              </mat-option>
+            </mat-select>
+          </mat-form-field>
+
+          <div class="pt-template-preview" *ngIf="selectedTemplate">
+            <div class="pt-title">Template details</div>
+            <div class="pt-muted" *ngIf="selectedTemplate.description">{{ selectedTemplate.description }}</div>
+            <div class="pt-section" *ngIf="selectedTemplate.schema?.bom_fields?.length" data-tutorial="bom-dynamic-fields">
+              <div class="pt-h">BOM fields</div>
+              <div class="pt-field" *ngFor="let f of selectedTemplate.schema.bom_fields">
+                <span class="pt-field-name">{{ f.label || f.key }}</span>
+                <span class="pt-muted">({{ f.type }})</span>
+              </div>
+            </div>
+            <div class="pt-section" *ngIf="selectedTemplate.schema?.item_fields?.length">
+              <div class="pt-h">Item fields</div>
+              <div class="pt-field" *ngFor="let f of selectedTemplate.schema.item_fields">
+                <span class="pt-field-name">{{ f.label || f.key }}</span>
+                <span class="pt-muted">({{ f.type }})</span>
+              </div>
+            </div>
+          </div>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Title</mat-label>
+            <input matInput formControlName="title" />
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Project</mat-label>
+            <input matInput formControlName="project" />
+          </mat-form-field>
+
+          <div class="pt-row" style="gap: 10px; align-items:center; flex-wrap: wrap">
+            <button mat-raised-button color="primary" type="submit" [disabled]="form.invalid || loading">
+              <span *ngIf="!loading">
+                <mat-icon>add</mat-icon>
+                Create draft
+              </span>
+              <span *ngIf="loading" class="pt-row" style="gap: 10px; align-items:center">
+                
+                Creating...
+              </span>
+            </button>
+            <a mat-button routerLink="/boms">Cancel</a>
+          </div>
+        </form>
+      </mat-card-content>
+    </mat-card>
+  

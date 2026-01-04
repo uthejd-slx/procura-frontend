@@ -1,0 +1,57 @@
+    <app-auth-shell headline="Set new password" subhead="Choose a strong password you haven't used before.">
+      <div class="auth-form">
+        <p *ngIf="!linkValid" style="margin: 0 0 12px">Invalid or expired reset link.</p>
+        <form *ngIf="linkValid" [formGroup]="form" (ngSubmit)="submit()">
+          <mat-form-field appearance="outline" class="auth-field">
+            <mat-label>New password</mat-label>
+            <input
+              matInput
+              formControlName="password"
+              [type]="hidePassword ? 'password' : 'text'"
+              autocomplete="new-password"
+            />
+            <button mat-icon-button matSuffix type="button" (click)="hidePassword = !hidePassword">
+              <mat-icon>{{ hidePassword ? 'visibility' : 'visibility_off' }}</mat-icon>
+            </button>
+            <mat-error *ngIf="form.controls.password.touched && form.controls.password.hasError('required')">
+              Password is required
+            </mat-error>
+            <mat-error *ngIf="form.controls.password.touched && form.controls.password.hasError('minlength')">
+              Password must be at least 8 characters
+            </mat-error>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="auth-field">
+            <mat-label>Confirm new password</mat-label>
+            <input
+              matInput
+              formControlName="confirmPassword"
+              [type]="hideConfirmPassword ? 'password' : 'text'"
+              autocomplete="new-password"
+            />
+            <button mat-icon-button matSuffix type="button" (click)="hideConfirmPassword = !hideConfirmPassword">
+              <mat-icon>{{ hideConfirmPassword ? 'visibility' : 'visibility_off' }}</mat-icon>
+            </button>
+            <mat-error *ngIf="form.controls.confirmPassword.touched && form.controls.confirmPassword.hasError('required')">
+              Confirm password is required
+            </mat-error>
+            <mat-error *ngIf="form.controls.confirmPassword.touched && form.hasError('passwordMismatch')">
+              Passwords do not match
+            </mat-error>
+          </mat-form-field>
+
+          <button class="auth-primary-btn" mat-raised-button type="submit" [disabled]="form.invalid || loading">
+            <span *ngIf="!loading">Update password</span>
+            <span *ngIf="loading" class="auth-loading">
+              
+              Updating...
+            </span>
+          </button>
+        </form>
+
+        <p class="auth-footer">
+          <a class="auth-link" routerLink="/login">Back to login</a>
+        </p>
+      </div>
+    </app-auth-shell>
+  

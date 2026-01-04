@@ -1,0 +1,108 @@
+      .profile-shell {
+        display: grid;
+        grid-template-columns: minmax(240px, 0.32fr) minmax(0, 1fr);
+        gap: 20px;
+        align-items: start;
+        margin-top: 12px;
+      }
+
+      .profile-side {
+        display: grid;
+        gap: 12px;
+      }
+
+      .profile-card {
+        border: var(--pt-card-border);
+        border-radius: var(--pt-card-radius);
+        background: var(--pt-card-bg);
+        padding: 16px;
+        display: grid;
+        gap: 8px;
+        text-align: center;
+      }
+
+      .profile-avatar {
+        width: 88px;
+        height: 88px;
+        border-radius: 50%;
+        border: 2px solid rgba(0, 0, 0, 0.6);
+        background: rgba(201, 218, 122, 0.16);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        color: rgba(201, 218, 122, 0.95);
+        font-weight: 700;
+        font-size: 28px;
+        margin: 0 auto;
+        overflow: hidden;
+      }
+
+      .profile-avatar img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+
+      .profile-name {
+        font-weight: 700;
+        font-size: 16px;
+      }
+
+      .profile-role {
+        font-size: 13px;
+        opacity: 0.85;
+      }
+
+      .profile-role.muted {
+        opacity: 0.55;
+      }
+
+      .profile-note {
+        font-size: 12.5px;
+        opacity: 0.7;
+        line-height: 1.4;
+      }
+
+      .profile-form {
+        display: grid;
+        gap: 14px;
+      }
+
+      .profile-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 12px;
+      }
+
+      .profile-actions {
+        display: flex;
+        justify-content: flex-end;
+      }
+
+      .profile-toggle {
+        border: var(--pt-card-border);
+        border-radius: var(--pt-card-radius);
+        background: var(--pt-card-bg);
+        padding: 12px 14px;
+        display: grid;
+        gap: 6px;
+      }
+
+      .profile-toggle-hint {
+        font-size: 12px;
+        opacity: 0.65;
+      }
+
+      @media (max-width: 980px) {
+        .profile-shell {
+          grid-template-columns: 1fr;
+        }
+
+        .profile-grid {
+          grid-template-columns: 1fr;
+        }
+
+        .profile-actions {
+          justify-content: flex-start;
+        }
+      }

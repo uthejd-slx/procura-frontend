@@ -1,0 +1,58 @@
+      .pt-form {
+        display: grid;
+        gap: 12px;
+        margin-top: 12px;
+      }
+      .pt-row {
+        display: flex;
+      }
+      .pt-muted {
+        opacity: 0.75;
+      }
+      .pt-alert {
+        border: 1px solid rgba(255, 180, 171, 0.4);
+        background: rgba(255, 180, 171, 0.08);
+        padding: 12px;
+        border-radius: var(--pt-card-radius);
+        margin: 12px 0;
+      }
+      .pt-option {
+        display: grid;
+        gap: 2px;
+      }
+      .pt-option-title {
+        font-weight: 600;
+      }
+      .pt-option-sub {
+        opacity: 0.75;
+        font-size: 12px;
+        white-space: normal;
+      }
+      .pt-template-preview {
+        border: var(--pt-card-border);
+        border-radius: var(--pt-card-radius);
+        background: var(--pt-card-bg);
+        padding: 12px;
+        display: grid;
+        gap: 10px;
+      }
+      .pt-title {
+        font-weight: 700;
+      }
+      .pt-section {
+        display: grid;
+        gap: 6px;
+      }
+      .pt-h {
+        font-weight: 700;
+        font-size: 13px;
+      }
+      .pt-field {
+        display: flex;
+        gap: 6px;
+        flex-wrap: wrap;
+      }
+      .pt-field-name {
+        font-weight: 600;
+      }
+    

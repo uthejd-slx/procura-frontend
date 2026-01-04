@@ -1,0 +1,86 @@
+    <div class="pt-page">
+      <div class="pt-header">
+        <div>
+          <div class="pt-title" data-tutorial="partners">Partners</div>
+          <div class="pt-muted">Manage partner companies for transfers.</div>
+        </div>
+        <div class="pt-actions">
+          <button mat-stroked-button color="primary" (click)="reload()">
+            <mat-icon>refresh</mat-icon>
+            Refresh
+          </button>
+        </div>
+      </div>
+
+      <div class="pt-grid">
+        <mat-card class="pt-panel">
+          <mat-card-title>Partner list</mat-card-title>
+          <mat-card-content>
+            <div *ngIf="loading()" class="pt-muted">No data available</div>
+
+            <table mat-table [dataSource]="partners()" *ngIf="!loading()" class="pt-table">
+              <ng-container matColumnDef="name">
+                <th mat-header-cell *matHeaderCellDef>Name</th>
+                <td mat-cell *matCellDef="let partner">
+                  <div class="pt-strong">{{ partner.name }}</div>
+                </td>
+              </ng-container>
+
+              <ng-container matColumnDef="contact">
+                <th mat-header-cell *matHeaderCellDef>Contact</th>
+                <td mat-cell *matCellDef="let partner">
+                  <div>{{ partner.contact_email || '?' }}</div>
+                  <div class="pt-muted">{{ partner.contact_phone || '' }}</div>
+                </td>
+              </ng-container>
+
+              <ng-container matColumnDef="address">
+                <th mat-header-cell *matHeaderCellDef>Address</th>
+                <td mat-cell *matCellDef="let partner">{{ partner.address || '?' }}</td>
+              </ng-container>
+
+              <ng-container matColumnDef="actions">
+                <th mat-header-cell *matHeaderCellDef>Actions</th>
+                <td mat-cell *matCellDef="let partner">
+                  <div class="pt-row" style="gap:8px;">
+                    <button mat-button color="primary" type="button" (click)="edit(partner)" [disabled]="!isProcurement()">Edit</button>
+                    <button mat-button color="primary" type="button" (click)="remove(partner)" [disabled]="!isProcurement()">Delete</button>
+                  </div>
+                </td>
+              </ng-container>
+
+              <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+              <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
+            </table>
+
+            <div *ngIf="!loading() && partners().length === 0" class="pt-muted">No data available</div>
+          </mat-card-content>
+        </mat-card>
+
+        <mat-card class="pt-panel">
+          <mat-card-title>{{ selected() ? 'Edit partner' : 'New partner' }}</mat-card-title>
+          <mat-card-content>
+            <div class="pt-muted" *ngIf="!isProcurement()">Procurement role required.</div>
+            <form class="pt-form" [formGroup]="editorForm" (ngSubmit)="save()">
+              <mat-form-field appearance="outline">
+                <input matInput placeholder="Name" formControlName="name" />
+              </mat-form-field>
+              <mat-form-field appearance="outline">
+                <input matInput placeholder="Contact email" formControlName="contact_email" />
+              </mat-form-field>
+              <mat-form-field appearance="outline">
+                <input matInput placeholder="Contact phone" formControlName="contact_phone" />
+              </mat-form-field>
+              <mat-form-field appearance="outline">
+                <textarea matInput rows="3" placeholder="Address" formControlName="address"></textarea>
+              </mat-form-field>
+              <div class="pt-row" style="gap:10px;">
+                <button mat-raised-button color="primary" type="submit" [disabled]="!isProcurement() || editorForm.invalid">Save</button>
+                <button mat-button color="primary" type="button" (click)="cancelEdit()" *ngIf="selected()">Cancel</button>
+              </div>
+            </form>
+          </mat-card-content>
+        </mat-card>
+      </div>
+    </div>
+  

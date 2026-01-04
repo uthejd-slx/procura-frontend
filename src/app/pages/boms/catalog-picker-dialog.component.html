@@ -1,0 +1,36 @@
+<div class="pt-dialog">
+  <div class="pt-dialog-head" mat-dialog-title>
+    <span class="pt-dialog-title">Select from catalog</span>
+    <span style="flex: 1 1 auto"></span>
+    <button mat-icon-button (click)="close()" aria-label="Close catalog picker">
+      <mat-icon>close</mat-icon>
+    </button>
+  </div>
+
+  <div mat-dialog-content class="pt-dialog-content">
+    <mat-form-field appearance="outline" class="pt-search">
+      <mat-label>Search catalog</mat-label>
+      <input matInput [formControl]="searchControl" placeholder="Name, vendor, category" />
+    </mat-form-field>
+
+    <div class="pt-empty" *ngIf="!filteredItems().length">No data available</div>
+
+    <div class="pt-list" *ngIf="filteredItems().length">
+      <div class="pt-item" *ngFor="let item of filteredItems(); trackBy: trackById">
+        <div class="pt-item-main">
+          <div class="pt-item-title">{{ item.name }}</div>
+          <div class="pt-item-meta">
+            <span *ngIf="item.vendor_name">{{ item.vendor_name }}</span>
+            <span *ngIf="item.category">· {{ item.category }}</span>
+            <span *ngIf="item.currency || item.unit_price">· {{ item.currency }} {{ item.unit_price }}</span>
+          </div>
+          <div class="pt-item-desc" *ngIf="item.description">{{ item.description }}</div>
+          <a *ngIf="item.vendor_url" class="pt-link" [href]="item.vendor_url" target="_blank" rel="noopener">
+            Vendor link
+          </a>
+        </div>
+        <button mat-stroked-button color="primary" type="button" (click)="select(item)">Use</button>
+      </div>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,37 @@
+      .pt-row {
+        display: flex;
+      }
+      .pt-muted {
+        opacity: 0.75;
+      }
+      .pt-title {
+        font-weight: 600;
+      }
+      .pt-table {
+        width: 100%;
+      }
+      .pt-link {
+        color: rgba(201, 218, 122, 0.95);
+        text-decoration: none;
+        font-weight: 600;
+      }
+      .pt-link:hover {
+        text-decoration: underline;
+      }
+      .pt-grid {
+        display: grid;
+        gap: 10px;
+      }
+      .pt-line {
+        display: flex;
+        gap: 12px;
+        align-items: center;
+        padding: 12px;
+        border: var(--pt-card-border);
+        border-radius: var(--pt-card-radius);
+        background: var(--pt-card-bg);
+      }
+      :host ::ng-deep .mat-mdc-form-field-subscript-wrapper {
+        display: none;
+      }
+    

@@ -1,0 +1,59 @@
+<ng-container *ngIf="!isAuthRoute(); else authLayout">
+  <mat-toolbar color="primary">
+    <span class="app-brand" routerLink="/">
+      <mat-icon class="app-brand-mark" svgIcon="procura_mark"></mat-icon>
+      <span class="app-brand-text">procura</span>
+    </span>
+    <span style="flex: 1 1 auto"></span>
+    <button
+      *ngIf="isAuthenticated()"
+      mat-icon-button
+      [matMenuTriggerFor]="userMenu"
+      aria-label="User menu"
+    >
+      <mat-icon class="app-user-icon" svgIcon="pt_account"></mat-icon>
+    </button>
+  </mat-toolbar>
+
+  <main class="app-main">
+    <div class="app-surface">
+      <mat-sidenav-container class="app-sidenav-container">
+        <mat-sidenav class="app-sidenav" mode="side" opened>
+          <mat-nav-list>
+            <a
+              mat-list-item
+              routerLink="/"
+              routerLinkActive="active"
+              [routerLinkActiveOptions]="{ exact: true }"
+              matTooltip="Home"
+              matTooltipPosition="right"
+              aria-label="Home"
+            >
+              <mat-icon svgIcon="pt_home"></mat-icon>
+            </a>
+          </mat-nav-list>
+        </mat-sidenav>
+
+        <mat-sidenav-content class="app-content">
+          <router-outlet></router-outlet>
+        </mat-sidenav-content>
+      </mat-sidenav-container>
+    </div>
+  </main>
+</ng-container>
+
+<ng-template #authLayout>
+  <router-outlet></router-outlet>
+</ng-template>
+
+<mat-menu #userMenu="matMenu">
+  <button mat-menu-item routerLink="/profile">
+    <mat-icon svgIcon="pt_profile"></mat-icon>
+    <span>Profile</span>
+  </button>
+  <button mat-menu-item (click)="logout()">
+    <mat-icon svgIcon="pt_logout"></mat-icon>
+    <span>Logout</span>
+  </button>
+</mat-menu>
+

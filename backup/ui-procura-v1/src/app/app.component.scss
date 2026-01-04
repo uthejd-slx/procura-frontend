@@ -1,0 +1,94 @@
+.app-main {
+  padding: 18px 18px 24px;
+  max-width: 1320px;
+  margin: 0 auto;
+  height: calc(100vh - 64px);
+  box-sizing: border-box;
+}
+
+.app-brand {
+  cursor: pointer;
+  color: #1f1f1f;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  letter-spacing: 0.2px;
+}
+
+.app-brand-mark {
+  width: 28px;
+  height: 28px;
+}
+
+.app-brand-text {
+  font-size: 18px;
+  line-height: 1;
+}
+
+.app-user-icon {
+  font-size: 28px;
+  width: 28px;
+  height: 28px;
+}
+
+.app-surface {
+  height: 100%;
+  background: #1f1f1f;
+  border-radius: 26px;
+  border: 1px solid rgba(31, 31, 31, 0.1);
+  box-shadow: 0 26px 60px rgba(0, 0, 0, 0.35);
+  overflow: hidden;
+}
+
+.app-sidenav-container {
+  height: 100%;
+  background: transparent;
+}
+
+.app-sidenav {
+  width: 260px;
+  background: #1c1c1c;
+  border-right: 1px solid rgba(201, 218, 122, 0.14);
+}
+
+.app-content {
+  padding: 22px 24px;
+  color: rgba(230, 230, 230, 0.92);
+  height: 100%;
+  box-sizing: border-box;
+  overflow: auto;
+}
+
+:host ::ng-deep .mat-mdc-list-item .mdc-list-item__primary-text {
+  color: rgba(230, 230, 230, 0.92);
+}
+
+:host ::ng-deep .mat-mdc-list-item .mat-icon {
+  color: rgba(201, 218, 122, 0.95);
+}
+
+:host ::ng-deep .mat-mdc-list-item.active,
+:host ::ng-deep .mat-mdc-list-item:hover {
+  background: rgba(201, 218, 122, 0.12);
+}
+
+:host ::ng-deep .mat-mdc-menu-panel {
+  background: #1f1f1f;
+  border: 1px solid rgba(201, 218, 122, 0.14);
+}
+
+:host ::ng-deep .mat-mdc-menu-item {
+  color: rgba(230, 230, 230, 0.9);
+}
+
+:host ::ng-deep .mat-mdc-menu-item:hover,
+:host ::ng-deep .mat-mdc-menu-item.cdk-program-focused,
+:host ::ng-deep .mat-mdc-menu-item.cdk-keyboard-focused {
+  background: rgba(201, 218, 122, 0.12);
+}
+
+:host ::ng-deep .mat-mdc-menu-item .mat-icon {
+  color: rgba(201, 218, 122, 0.95);
+}
+

@@ -1,0 +1,14 @@
+    <div class="pt-toast-stack" *ngIf="items().length">
+      <div
+        class="pt-toast"
+        *ngFor="let item of items()"
+        [class.is-success]="item.variant === 'success'"
+        [class.is-error]="item.variant === 'error'"
+      >
+        <div class="pt-toast-text">{{ item.message }}</div>
+        <button class="pt-toast-close" type="button" (click)="dismiss(item.id)" aria-label="Close notification">
+          <mat-icon>close</mat-icon>
+        </button>
+      </div>
+    </div>
+  

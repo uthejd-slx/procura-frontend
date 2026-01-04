@@ -1,0 +1,359 @@
+    <mat-card>
+      <mat-card-title>BOM Templates</mat-card-title>
+      <mat-card-content>
+        <div class="pt-row" style="margin: 12px 0; gap: 10px; align-items:center">
+          <span class="pt-muted">{{ templates.length }} templates</span>
+          <span style="flex: 1 1 auto"></span>
+          <button mat-stroked-button color="primary" (click)="reload()" [disabled]="loading">
+            <mat-icon>refresh</mat-icon>
+            Refresh
+          </button>
+          <button mat-raised-button color="primary" (click)="showCreate = !showCreate">
+            <mat-icon>add</mat-icon>
+            New template
+          </button>
+        </div>
+
+        <form *ngIf="showCreate" [formGroup]="createForm" (ngSubmit)="create()" class="pt-grid">
+          <mat-form-field appearance="outline" style="grid-column: span 2">
+            <mat-label>Name</mat-label>
+            <input matInput formControlName="name" />
+          </mat-form-field>
+          <mat-form-field appearance="outline" style="grid-column: span 2">
+            <mat-label>Description</mat-label>
+            <textarea matInput formControlName="description" rows="2"></textarea>
+          </mat-form-field>
+
+          <div class="pt-field-block" style="grid-column: span 2">
+            <div class="pt-row pt-field-head">
+              <div class="pt-h">BOM fields</div>
+              <span class="pt-muted">Optional</span>
+              <span style="flex: 1 1 auto"></span>
+              <button mat-button type="button" (click)="addCreateField('bom')">Add field</button>
+            </div>
+            <div class="pt-field-list" formArrayName="bom_fields">
+              <div class="pt-field-row" *ngFor="let field of createBomFields.controls; let i = index" [formGroupName]="i">
+                <mat-form-field appearance="outline">
+                  <mat-label>Label</mat-label>
+                  <input matInput formControlName="label" />
+                </mat-form-field>
+                <mat-form-field appearance="outline">
+                  <mat-label>Type</mat-label>
+                  <mat-select formControlName="type">
+                    <mat-option value="text">Text</mat-option>
+                    <mat-option value="textarea">Textarea</mat-option>
+                    <mat-option value="number">Number</mat-option>
+                    <mat-option value="date">Date</mat-option>
+                    <mat-option value="select">Select</mat-option>
+                    <mat-option value="url">URL</mat-option>
+                    <mat-option value="boolean">Boolean</mat-option>
+                  </mat-select>
+                </mat-form-field>
+                <mat-form-field appearance="outline" *ngIf="field.get('type')?.value === 'select'">
+                  <mat-label>Options (comma separated)</mat-label>
+                  <input matInput formControlName="options" />
+                </mat-form-field>
+                <button mat-icon-button type="button" class="pt-field-remove" (click)="removeCreateField('bom', i)"
+                  aria-label="Remove field">
+                  <mat-icon>close</mat-icon>
+                </button>
+              </div>
+              <div class="pt-muted" *ngIf="!createBomFields.length">No BOM fields yet.</div>
+            </div>
+          </div>
+
+          <div class="pt-field-block" style="grid-column: span 2">
+            <div class="pt-row pt-field-head">
+              <div class="pt-h">Item fields</div>
+              <span class="pt-muted">Optional</span>
+              <span style="flex: 1 1 auto"></span>
+              <button mat-button type="button" (click)="addCreateField('item')">Add field</button>
+            </div>
+            <div class="pt-field-list" formArrayName="item_fields">
+              <div class="pt-field-row" *ngFor="let field of createItemFields.controls; let i = index" [formGroupName]="i">
+                <mat-form-field appearance="outline">
+                  <mat-label>Label</mat-label>
+                  <input matInput formControlName="label" />
+                </mat-form-field>
+                <mat-form-field appearance="outline">
+                  <mat-label>Type</mat-label>
+                  <mat-select formControlName="type">
+                    <mat-option value="text">Text</mat-option>
+                    <mat-option value="textarea">Textarea</mat-option>
+                    <mat-option value="number">Number</mat-option>
+                    <mat-option value="date">Date</mat-option>
+                    <mat-option value="select">Select</mat-option>
+                    <mat-option value="url">URL</mat-option>
+                    <mat-option value="boolean">Boolean</mat-option>
+                  </mat-select>
+                </mat-form-field>
+                <mat-form-field appearance="outline" *ngIf="field.get('type')?.value === 'select'">
+                  <mat-label>Options (comma separated)</mat-label>
+                  <input matInput formControlName="options" />
+                </mat-form-field>
+                <button mat-icon-button type="button" class="pt-field-remove" (click)="removeCreateField('item', i)"
+                  aria-label="Remove field">
+                  <mat-icon>close</mat-icon>
+                </button>
+              </div>
+              <div class="pt-muted" *ngIf="!createItemFields.length">No item fields yet.</div>
+            </div>
+          </div>
+
+          <div class="pt-row" style="gap:10px; grid-column: span 2; flex-wrap: wrap">
+            <button mat-raised-button color="primary" type="submit" [disabled]="createForm.invalid || creating">
+              <span *ngIf="!creating">Create</span>
+              <span *ngIf="creating" class="pt-row" style="gap: 10px; align-items:center">
+                Creating...
+              </span>
+            </button>
+            <button mat-button type="button" (click)="showCreate = false">Cancel</button>
+          </div>
+        </form>
+
+        <div *ngIf="loading" class="pt-row" style="gap:12px; align-items:center">
+          
+          <span>No data available</span>
+        </div>
+
+        <div class="pt-section" *ngIf="!loading">
+          <div class="pt-h" data-tutorial="global-templates">Global</div>
+          <div *ngIf="globalTemplates.length === 0" class="pt-muted">No global templates.</div>
+          <div class="pt-list">
+            <div *ngFor="let t of globalTemplates" class="pt-tpl" [class.pt-tpl-highlight]="highlightId === t.id">
+              <div class="pt-row" style="gap: 10px; align-items:center; flex-wrap: wrap">
+                <div style="flex: 1 1 auto">
+                  <div class="pt-title">{{ t.name }}</div>
+                  <div class="pt-muted" *ngIf="t.description">{{ t.description }}</div>
+                </div>
+                <button mat-button color="primary" (click)="viewTemplate(t)">View</button>
+                <button *ngIf="canEditTemplate(t)" mat-button color="primary" (click)="toggleEdit(t.id)">Edit</button>
+                <button
+                  *ngIf="canDeleteTemplate(t)"
+                  mat-button
+                  color="primary"
+                  (click)="deleteTemplate(t)"
+                  [disabled]="deletingId === t.id"
+                >
+                  Delete
+                </button>
+              </div>
+
+              <form *ngIf="editingId === t.id" [formGroup]="editForm" (ngSubmit)="save(t)">
+                <div class="pt-grid" style="margin-top: 10px">
+                  <mat-form-field appearance="outline" style="grid-column: span 2">
+                    <mat-label>Name</mat-label>
+                    <input matInput formControlName="name" />
+                  </mat-form-field>
+                  <mat-form-field appearance="outline" style="grid-column: span 2">
+                    <mat-label>Description</mat-label>
+                    <textarea matInput formControlName="description" rows="2"></textarea>
+                  </mat-form-field>
+                </div>
+
+                <div class="pt-field-block">
+                  <div class="pt-row pt-field-head">
+                    <div class="pt-h">BOM fields</div>
+                    <span class="pt-muted">Optional</span>
+                    <span style="flex: 1 1 auto"></span>
+                    <button mat-button type="button" (click)="addEditField('bom')">Add field</button>
+                  </div>
+                  <div class="pt-field-list" formArrayName="bom_fields">
+                    <div class="pt-field-row" *ngFor="let field of editBomFields.controls; let i = index" [formGroupName]="i">
+                      <mat-form-field appearance="outline">
+                        <mat-label>Label</mat-label>
+                        <input matInput formControlName="label" />
+                      </mat-form-field>
+                      <mat-form-field appearance="outline">
+                        <mat-label>Type</mat-label>
+                        <mat-select formControlName="type">
+                          <mat-option value="text">Text</mat-option>
+                          <mat-option value="textarea">Textarea</mat-option>
+                          <mat-option value="number">Number</mat-option>
+                          <mat-option value="date">Date</mat-option>
+                          <mat-option value="select">Select</mat-option>
+                          <mat-option value="url">URL</mat-option>
+                          <mat-option value="boolean">Boolean</mat-option>
+                        </mat-select>
+                      </mat-form-field>
+                      <mat-form-field appearance="outline" *ngIf="field.get('type')?.value === 'select'">
+                        <mat-label>Options (comma separated)</mat-label>
+                        <input matInput formControlName="options" />
+                      </mat-form-field>
+                      <button mat-icon-button type="button" class="pt-field-remove" (click)="removeEditField('bom', i)"
+                        aria-label="Remove field">
+                        <mat-icon>close</mat-icon>
+                      </button>
+                    </div>
+                    <div class="pt-muted" *ngIf="!editBomFields.length">No BOM fields yet.</div>
+                  </div>
+                </div>
+
+                <div class="pt-field-block">
+                  <div class="pt-row pt-field-head">
+                    <div class="pt-h">Item fields</div>
+                    <span class="pt-muted">Optional</span>
+                    <span style="flex: 1 1 auto"></span>
+                    <button mat-button type="button" (click)="addEditField('item')">Add field</button>
+                  </div>
+                  <div class="pt-field-list" formArrayName="item_fields">
+                    <div class="pt-field-row" *ngFor="let field of editItemFields.controls; let i = index" [formGroupName]="i">
+                      <mat-form-field appearance="outline">
+                        <mat-label>Label</mat-label>
+                        <input matInput formControlName="label" />
+                      </mat-form-field>
+                      <mat-form-field appearance="outline">
+                        <mat-label>Type</mat-label>
+                        <mat-select formControlName="type">
+                          <mat-option value="text">Text</mat-option>
+                          <mat-option value="textarea">Textarea</mat-option>
+                          <mat-option value="number">Number</mat-option>
+                          <mat-option value="date">Date</mat-option>
+                          <mat-option value="select">Select</mat-option>
+                          <mat-option value="url">URL</mat-option>
+                          <mat-option value="boolean">Boolean</mat-option>
+                        </mat-select>
+                      </mat-form-field>
+                      <mat-form-field appearance="outline" *ngIf="field.get('type')?.value === 'select'">
+                        <mat-label>Options (comma separated)</mat-label>
+                        <input matInput formControlName="options" />
+                      </mat-form-field>
+                      <button mat-icon-button type="button" class="pt-field-remove" (click)="removeEditField('item', i)"
+                        aria-label="Remove field">
+                        <mat-icon>close</mat-icon>
+                      </button>
+                    </div>
+                    <div class="pt-muted" *ngIf="!editItemFields.length">No item fields yet.</div>
+                  </div>
+                </div>
+
+                <div class="pt-row" style="gap:10px; grid-column: span 2; flex-wrap: wrap; margin-top: 12px">
+                  <button mat-raised-button color="primary" type="submit" [disabled]="editForm.invalid || saving">
+                    Save
+                  </button>
+                  <button mat-button type="button" (click)="editingId = null">Cancel</button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+
+        <div class="pt-section" *ngIf="!loading">
+          <div class="pt-h">Mine</div>
+          <div *ngIf="myTemplates.length === 0" class="pt-muted">You have no templates yet.</div>
+
+          <div class="pt-list">
+            <div *ngFor="let t of myTemplates" class="pt-tpl" [class.pt-tpl-highlight]="highlightId === t.id">
+              <div class="pt-row" style="gap: 10px; align-items:center; flex-wrap: wrap">
+                <div style="flex: 1 1 auto">
+                  <div class="pt-title">{{ t.name }}</div>
+                  <div class="pt-muted" *ngIf="t.description">{{ t.description }}</div>
+                </div>
+                <button mat-button color="primary" (click)="viewTemplate(t)">View</button>
+                <button *ngIf="canEditTemplate(t)" mat-button color="primary" (click)="toggleEdit(t.id)">Edit</button>
+                <button *ngIf="canDeleteTemplate(t)" mat-button color="primary" (click)="deleteTemplate(t)" [disabled]="deletingId === t.id">
+                  Delete
+                </button>
+              </div>
+
+              <form *ngIf="editingId === t.id" [formGroup]="editForm" (ngSubmit)="save(t)">
+                <div class="pt-grid" style="margin-top: 10px">
+                  <mat-form-field appearance="outline" style="grid-column: span 2">
+                    <mat-label>Name</mat-label>
+                    <input matInput formControlName="name" />
+                  </mat-form-field>
+                  <mat-form-field appearance="outline" style="grid-column: span 2">
+                    <mat-label>Description</mat-label>
+                    <textarea matInput formControlName="description" rows="2"></textarea>
+                  </mat-form-field>
+                </div>
+
+                <div class="pt-field-block">
+                  <div class="pt-row pt-field-head">
+                    <div class="pt-h">BOM fields</div>
+                    <span class="pt-muted">Optional</span>
+                    <span style="flex: 1 1 auto"></span>
+                    <button mat-button type="button" (click)="addEditField('bom')">Add field</button>
+                  </div>
+                  <div class="pt-field-list" formArrayName="bom_fields">
+                    <div class="pt-field-row" *ngFor="let field of editBomFields.controls; let i = index" [formGroupName]="i">
+                      <mat-form-field appearance="outline">
+                        <mat-label>Label</mat-label>
+                        <input matInput formControlName="label" />
+                      </mat-form-field>
+                      <mat-form-field appearance="outline">
+                        <mat-label>Type</mat-label>
+                        <mat-select formControlName="type">
+                          <mat-option value="text">Text</mat-option>
+                          <mat-option value="textarea">Textarea</mat-option>
+                          <mat-option value="number">Number</mat-option>
+                          <mat-option value="date">Date</mat-option>
+                          <mat-option value="select">Select</mat-option>
+                          <mat-option value="url">URL</mat-option>
+                          <mat-option value="boolean">Boolean</mat-option>
+                        </mat-select>
+                      </mat-form-field>
+                      <mat-form-field appearance="outline" *ngIf="field.get('type')?.value === 'select'">
+                        <mat-label>Options (comma separated)</mat-label>
+                        <input matInput formControlName="options" />
+                      </mat-form-field>
+                      <button mat-icon-button type="button" class="pt-field-remove" (click)="removeEditField('bom', i)"
+                        aria-label="Remove field">
+                        <mat-icon>close</mat-icon>
+                      </button>
+                    </div>
+                    <div class="pt-muted" *ngIf="!editBomFields.length">No BOM fields yet.</div>
+                  </div>
+                </div>
+
+                <div class="pt-field-block">
+                  <div class="pt-row pt-field-head">
+                    <div class="pt-h">Item fields</div>
+                    <span class="pt-muted">Optional</span>
+                    <span style="flex: 1 1 auto"></span>
+                    <button mat-button type="button" (click)="addEditField('item')">Add field</button>
+                  </div>
+                  <div class="pt-field-list" formArrayName="item_fields">
+                    <div class="pt-field-row" *ngFor="let field of editItemFields.controls; let i = index" [formGroupName]="i">
+                      <mat-form-field appearance="outline">
+                        <mat-label>Label</mat-label>
+                        <input matInput formControlName="label" />
+                      </mat-form-field>
+                      <mat-form-field appearance="outline">
+                        <mat-label>Type</mat-label>
+                        <mat-select formControlName="type">
+                          <mat-option value="text">Text</mat-option>
+                          <mat-option value="textarea">Textarea</mat-option>
+                          <mat-option value="number">Number</mat-option>
+                          <mat-option value="date">Date</mat-option>
+                          <mat-option value="select">Select</mat-option>
+                          <mat-option value="url">URL</mat-option>
+                          <mat-option value="boolean">Boolean</mat-option>
+                        </mat-select>
+                      </mat-form-field>
+                      <mat-form-field appearance="outline" *ngIf="field.get('type')?.value === 'select'">
+                        <mat-label>Options (comma separated)</mat-label>
+                        <input matInput formControlName="options" />
+                      </mat-form-field>
+                      <button mat-icon-button type="button" class="pt-field-remove" (click)="removeEditField('item', i)"
+                        aria-label="Remove field">
+                        <mat-icon>close</mat-icon>
+                      </button>
+                    </div>
+                    <div class="pt-muted" *ngIf="!editItemFields.length">No item fields yet.</div>
+                  </div>
+                </div>
+
+                <div class="pt-row" style="gap:10px; grid-column: span 2; flex-wrap: wrap; margin-top: 12px">
+                  <button mat-raised-button color="primary" type="submit" [disabled]="editForm.invalid || saving">
+                    Save
+                  </button>
+                  <button mat-button type="button" (click)="editingId = null">Cancel</button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      </mat-card-content>
+    </mat-card>
+  

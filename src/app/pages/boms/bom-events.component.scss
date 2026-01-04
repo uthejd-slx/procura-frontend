@@ -1,0 +1,30 @@
+      .pt-row {
+        display: flex;
+      }
+      .pt-muted {
+        opacity: 0.75;
+      }
+      .pt-title {
+        font-weight: 700;
+      }
+      .pt-event {
+        padding: 14px 12px;
+        border: var(--pt-card-border);
+        border-radius: var(--pt-card-radius);
+        background: var(--pt-card-bg);
+        margin-bottom: 12px;
+      }
+      .pt-body {
+        margin-top: 6px;
+        opacity: 0.9;
+        white-space: pre-wrap;
+      }
+      .pt-data {
+        margin-top: 10px;
+        opacity: 0.85;
+        background: rgba(0, 0, 0, 0.25);
+        padding: 10px;
+        border-radius: 12px;
+        overflow: auto;
+      }
+    

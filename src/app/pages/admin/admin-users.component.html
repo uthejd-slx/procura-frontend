@@ -1,0 +1,87 @@
+    <mat-card>
+      <mat-card-title data-tutorial="admin-users">Admin  -  Users</mat-card-title>
+      <mat-card-content>
+        <div *ngIf="loading" class="pt-row" style="gap:12px; align-items:center; margin: 10px 0">
+          
+          <span>No data available</span>
+        </div>
+
+        <div class="pt-row pt-table-toolbar" *ngIf="!loading">
+          <mat-form-field appearance="outline" class="pt-search">
+            <mat-icon matPrefix>search</mat-icon>
+            <input matInput [formControl]="searchControl" placeholder="Search users" />
+          </mat-form-field>
+          <span class="pt-muted">{{ filteredUsers.length }} users</span>
+          <span style="flex: 1 1 auto"></span>
+          <button mat-stroked-button color="primary" (click)="reload()">
+            <mat-icon>refresh</mat-icon>
+            Refresh
+          </button>
+        </div>
+
+        <table mat-table [dataSource]="filteredUsers" *ngIf="!loading" class="pt-table">
+          <ng-container matColumnDef="email">
+            <th mat-header-cell *matHeaderCellDef>Email</th>
+            <td mat-cell *matCellDef="let u">
+              <div class="pt-title">{{ u.email }}</div>
+              <div class="pt-muted">#{{ u.id }}</div>
+            </td>
+          </ng-container>
+
+          <ng-container matColumnDef="roles">
+            <th mat-header-cell *matHeaderCellDef>Roles</th>
+            <td mat-cell *matCellDef="let u">
+              <mat-chip-set>
+                <mat-chip>employee</mat-chip>
+                <mat-chip *ngFor="let r of u.roles">{{ r }}</mat-chip>
+              </mat-chip-set>
+            </td>
+          </ng-container>
+
+          <ng-container matColumnDef="edit">
+            <th mat-header-cell *matHeaderCellDef>Update</th>
+            <td mat-cell *matCellDef="let u">
+              <ng-container *ngIf="formFor(u.id) as form">
+                <div class="pt-edit">
+                  <div class="pt-edit-field">
+                    <mat-form-field appearance="outline" class="pt-role-select">
+                      <mat-select [formControl]="form.controls.roles" multiple>
+                        <mat-select-trigger>
+                          {{
+                            form.controls.roles.value.length
+                              ? form.controls.roles.value.join(', ')
+                              : 'Select roles'
+                          }}
+                        </mat-select-trigger>
+                        <mat-option *ngFor="let r of editableRoles" [value]="r">{{ r }}</mat-option>
+                      </mat-select>
+                    </mat-form-field>
+                  </div>
+
+                  <div class="pt-edit-actions">
+                    <div class="pt-toggle-shell">
+                      <mat-slide-toggle [formControl]="form.controls.is_active">Active</mat-slide-toggle>
+                    </div>
+                    <button
+                      mat-raised-button
+                      color="primary"
+                      class="pt-save-btn"
+                      type="button"
+                      (click)="save(u)"
+                      [disabled]="savingId === u.id || !hasChanges(u)"
+                    >
+                      <mat-icon>save</mat-icon>
+                      Save
+                    </button>
+                  </div>
+                </div>
+              </ng-container>
+            </td>
+          </ng-container>
+
+          <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+          <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
+        </table>
+      </mat-card-content>
+    </mat-card>
+  

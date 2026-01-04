@@ -1,0 +1,27 @@
+    <app-auth-shell headline="Reset password" subhead="Enter your email and we'll send you a reset link.">
+      <form class="auth-form" [formGroup]="form" (ngSubmit)="submit()">
+        <mat-form-field appearance="outline" class="auth-field">
+          <mat-label>Email</mat-label>
+          <input matInput formControlName="email" type="email" autocomplete="email" />
+          <mat-error *ngIf="form.controls.email.touched && form.controls.email.hasError('required')">
+            Email is required
+          </mat-error>
+          <mat-error *ngIf="form.controls.email.touched && form.controls.email.hasError('email')">
+            Enter a valid email address
+          </mat-error>
+        </mat-form-field>
+        <button class="auth-primary-btn" mat-raised-button type="submit" [disabled]="form.invalid || loading">
+          <span *ngIf="!loading">Send reset link</span>
+          <span *ngIf="loading" class="auth-loading">
+            
+            Sending...
+          </span>
+        </button>
+
+        <p class="auth-footer">
+          Remembered your password?
+          <a class="auth-link" routerLink="/login">Login</a>
+        </p>
+      </form>
+    </app-auth-shell>
+  

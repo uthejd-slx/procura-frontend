@@ -1,0 +1,36 @@
+<div class="pt-page pt-help-page">
+  <div class="pt-header">
+    <div>
+      <div class="pt-title">Help guide</div>
+      <div class="pt-muted">Step-by-step walkthrough with screenshots.</div>
+    </div>
+    <div class="pt-actions">
+      <button mat-stroked-button color="primary" type="button" (click)="startTutorial()">
+        <mat-icon>help_outline</mat-icon>
+        Start tutorial
+      </button>
+    </div>
+  </div>
+
+  <mat-card class="pt-panel">
+    <mat-card-content>
+      <div *ngIf="loading()" class="pt-muted">Loading help guide...</div>
+      <div *ngIf="error()" class="pt-muted">{{ error() }}</div>
+      <div *ngIf="!loading() && !error()" class="pt-help-layout">
+        <aside class="pt-help-nav" *ngIf="toc().length">
+          <div class="pt-help-nav-title">On this page</div>
+          <a
+            *ngFor="let item of toc()"
+            class="pt-help-link"
+            [class.is-sub]="item.level > 2"
+            [attr.href]="'#' + item.id"
+            (click)="scrollTo(item.id, $event)"
+          >
+            {{ item.text }}
+          </a>
+        </aside>
+        <div class="pt-help-body pt-help-content" [innerHTML]="content()"></div>
+      </div>
+    </mat-card-content>
+  </mat-card>
+</div>

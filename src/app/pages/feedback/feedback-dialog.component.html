@@ -1,0 +1,119 @@
+    <div class="pt-dialog">
+      <div class="pt-dialog-head" mat-dialog-title>
+        <span class="pt-dialog-title">Send feedback</span>
+        <span style="flex: 1 1 auto"></span>
+        <div class="pt-dialog-actions">
+          <button mat-icon-button (click)="toggleExpand()" aria-label="Expand feedback">
+            <mat-icon>{{ isExpanded() ? 'close_fullscreen' : 'open_in_full' }}</mat-icon>
+          </button>
+          <button mat-icon-button (click)="closeAndReset()" aria-label="Close feedback dialog">
+            <mat-icon>close</mat-icon>
+          </button>
+        </div>
+      </div>
+
+      <div mat-dialog-content class="pt-dialog-content">
+        <form class="pt-form" [formGroup]="createForm" (ngSubmit)="submit()">
+          <mat-form-field appearance="outline">
+            <mat-label>Category</mat-label>
+            <mat-select formControlName="category">
+              <mat-option *ngFor="let c of categories" [value]="c">{{ c }}</mat-option>
+            </mat-select>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Rating</mat-label>
+            <mat-select formControlName="rating">
+              <mat-option value="">None</mat-option>
+              <mat-option *ngFor="let r of [1,2,3,4,5]" [value]="r">{{ r }}</mat-option>
+            </mat-select>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="pt-form-wide">
+            <mat-label>Message</mat-label>
+            <textarea matInput rows="3" formControlName="message" placeholder="Tell us what happened or what you need"></textarea>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="pt-form-wide">
+            <mat-label>Page URL</mat-label>
+            <input matInput formControlName="page_url" readonly />
+          </mat-form-field>
+
+          <div class="pt-form-actions">
+            <button mat-raised-button color="primary" class="pt-submit" type="submit" [disabled]="createForm.invalid">
+              Submit feedback
+            </button>
+            <button mat-button type="button" (click)="cancel()">Cancel</button>
+          </div>
+        </form>
+
+        <div class="pt-divider"></div>
+
+        <div class="pt-section-head">
+          <div class="pt-section-title">My feedback</div>
+          <span style="flex: 1 1 auto"></span>
+          <span class="pt-muted" *ngIf="!loadingList()">{{ total() }} total</span>
+        </div>
+
+        <div class="pt-feedback-list">
+          <div *ngIf="loadingList()" class="pt-feedback-card pt-feedback-empty">No data available</div>
+          <div *ngIf="!loadingList() && feedback().length === 0" class="pt-feedback-card pt-feedback-empty">
+            <div class="pt-feedback-head">
+              <div class="pt-chip">EMPTY</div>
+              <div class="pt-muted">No feedback yet.</div>
+            </div>
+            <div class="pt-message pt-muted">Submit feedback using the form above.</div>
+          </div>
+
+          <div *ngFor="let item of feedback()" class="pt-feedback-card">
+            <div class="pt-feedback-head">
+              <div class="pt-chip">{{ item.category }}</div>
+              <div class="pt-muted">{{ item.created_at | date: 'medium' }}</div>
+              <span style="flex: 1 1 auto"></span>
+              <div class="pt-status">{{ item.status }}</div>
+            </div>
+            <div class="pt-message">{{ item.message }}</div>
+            <div class="pt-meta">
+              <div *ngIf="item.rating">Rating: {{ item.rating }}/5</div>
+              <div *ngIf="item.page_url">Page: {{ item.page_url }}</div>
+            </div>
+
+            <div class="pt-admin" *ngIf="isAdmin()">
+              <mat-form-field appearance="outline">
+                <mat-label>Status</mat-label>
+                <mat-select [value]="getRowState(item).status" (selectionChange)="getRowState(item).status = $event.value">
+                  <mat-option *ngFor="let s of statuses" [value]="s">{{ s }}</mat-option>
+                </mat-select>
+              </mat-form-field>
+
+              <mat-form-field appearance="outline" class="pt-admin-note">
+                <mat-label>Admin note</mat-label>
+                <textarea matInput rows="2" [value]="getRowState(item).admin_note" (input)="getRowState(item).admin_note = $any($event.target).value"></textarea>
+              </mat-form-field>
+
+              <button mat-stroked-button color="primary" type="button"
+                class="pt-admin-save"
+                (click)="saveAdmin(item)"
+                [disabled]="getRowState(item).saving || !isDirty(item)">
+                Save
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div class="pt-pagination" *ngIf="!loadingList() && total()">
+          <span class="pt-muted">Page {{ page() }} of {{ pageCount() }}</span>
+          <span style="flex: 1 1 auto"></span>
+          <mat-form-field appearance="outline" class="pt-page-size">
+            <mat-label>Page size</mat-label>
+            <mat-select [value]="pageSize()" (selectionChange)="updatePageSize($event.value)">
+              <mat-option [value]="5">5</mat-option>
+              <mat-option [value]="8">8</mat-option>
+              <mat-option [value]="15">15</mat-option>
+            </mat-select>
+          </mat-form-field>
+          <button mat-stroked-button color="primary" (click)="prevPage()" [disabled]="!hasPrev()">Prev</button>
+          <button mat-stroked-button color="primary" (click)="nextPage()" [disabled]="!hasNext()">Next</button>
+        </div>
+      </div>
+    </div>

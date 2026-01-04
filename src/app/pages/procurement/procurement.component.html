@@ -1,0 +1,79 @@
+    <mat-card>
+      <mat-card-title data-tutorial="procurement">Procurement</mat-card-title>
+      <mat-card-content>
+        <div class="pt-row" style="margin: 12px 0; gap: 10px; align-items:center">
+          <span class="pt-muted" *ngIf="!loading">{{ boms.length }} queued BOMs</span>
+          <span style="flex: 1 1 auto"></span>
+          <button mat-stroked-button color="primary" (click)="reload()" [disabled]="loading">
+            <mat-icon>refresh</mat-icon>
+            Refresh
+          </button>
+        </div>
+        <div class="pt-muted" *ngIf="!isProcurement()">Procurement role required to take actions.</div>
+
+        <div *ngIf="loading" class="pt-row" style="gap:12px; align-items:center">
+          
+          <span>No data available</span>
+        </div>
+
+        <table mat-table [dataSource]="boms" class="pt-table" *ngIf="!loading" data-tutorial="procurement-actions">
+          <ng-container matColumnDef="bom">
+            <th mat-header-cell *matHeaderCellDef>BOM</th>
+            <td mat-cell *matCellDef="let b">
+              <div class="pt-title">
+                <a class="pt-link" [routerLink]="['/boms', b.id]">#{{ b.id }}  -  {{ b.title }}</a>
+              </div>
+              <div class="pt-muted">{{ b.status }}</div>
+            </td>
+          </ng-container>
+
+          <ng-container matColumnDef="actions">
+            <th mat-header-cell *matHeaderCellDef></th>
+            <td mat-cell *matCellDef="let b">
+              <div class="pt-row" style="gap: 8px; justify-content:flex-end; flex-wrap: wrap">
+                <button mat-raised-button color="primary" (click)="markOrdered(b)" [disabled]="actionId === b.id || !isProcurement()">
+                  Mark ordered
+                </button>
+                <button mat-stroked-button color="primary" (click)="openReceive(b)" [disabled]="!isProcurement()">Receive</button>
+              </div>
+            </td>
+          </ng-container>
+
+          <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+          <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
+        </table>
+      </mat-card-content>
+    </mat-card>
+
+    <mat-card *ngIf="receivingBom" style="margin-top: 16px">
+      <mat-card-title>Receive  -  BOM #{{ receivingBom.id }}</mat-card-title>
+      <mat-card-content>
+        <p class="pt-muted" style="margin-top: 6px">
+          Enter received quantities (only lines with a value &gt; 0 will be submitted).
+        </p>
+
+        <form [formGroup]="receiveForm" class="pt-grid">
+          <div class="pt-line" *ngFor="let i of receivingBom.items">
+            <div style="flex: 1 1 auto">
+              <div class="pt-title">{{ i.name }}</div>
+              <div class="pt-muted">
+                Ordered: {{ i.quantity }} {{ i.unit }}  -  Received: {{ i.received_quantity }}  -  Remaining:
+                {{ remaining(i) }}
+              </div>
+            </div>
+            <mat-form-field appearance="outline" style="width: 160px">
+              <mat-label>Receive</mat-label>
+              <input matInput [formControlName]="i.id.toString()" />
+            </mat-form-field>
+          </div>
+        </form>
+
+        <div class="pt-row" style="gap: 10px; flex-wrap: wrap; align-items:center; margin-top: 10px">
+          <button mat-raised-button color="primary" (click)="submitReceive()" [disabled]="actionId === receivingBom.id || !isProcurement()">
+            Submit receipt
+          </button>
+          <button mat-button (click)="closeReceive()">Cancel</button>
+        </div>
+      </mat-card-content>
+    </mat-card>
+  

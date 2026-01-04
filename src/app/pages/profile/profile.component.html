@@ -1,0 +1,63 @@
+    <mat-card>
+      <mat-card-title>My Profile</mat-card-title>
+      <mat-card-content>
+        <div class="profile-shell">
+          <div class="profile-side">
+            <div class="profile-card">
+              <div class="profile-avatar">
+                <img *ngIf="avatarSrc; else initialsTpl" [src]="avatarSrc" alt="Avatar" />
+                <ng-template #initialsTpl>{{ initials }}</ng-template>
+              </div>
+              <div class="profile-name">{{ displayName }}</div>
+              <div class="profile-role" *ngIf="jobTitle; else roleEmpty">{{ jobTitle }}</div>
+              <ng-template #roleEmpty>
+                <div class="profile-role muted">Role not set</div>
+              </ng-template>
+            </div>
+            <div class="profile-note">
+              Keep your details up to date to improve approvals and notifications.
+            </div>
+          </div>
+
+          <form class="profile-form" [formGroup]="form" (ngSubmit)="save()">
+            <div class="profile-grid">
+              <mat-form-field appearance="outline">
+                <mat-label>Display name</mat-label>
+                <input matInput formControlName="display_name" />
+              </mat-form-field>
+
+              <mat-form-field appearance="outline">
+                <mat-label>Phone number</mat-label>
+                <input matInput formControlName="phone_number" />
+              </mat-form-field>
+
+              <mat-form-field appearance="outline">
+                <mat-label>Job title</mat-label>
+                <input matInput formControlName="job_title" />
+              </mat-form-field>
+
+              <mat-form-field appearance="outline">
+                <mat-label>Avatar URL</mat-label>
+                <input matInput formControlName="avatar_url" />
+              </mat-form-field>
+            </div>
+
+            <div class="profile-toggle">
+              <mat-slide-toggle formControlName="notifications_email_enabled">
+                Email me a copy of in-app notifications
+              </mat-slide-toggle>
+              <div class="profile-toggle-hint">
+                This only applies if notification emails are enabled on the backend.
+              </div>
+            </div>
+
+            <div class="profile-actions">
+              <button mat-raised-button color="primary" type="submit" [disabled]="loading">
+                Save changes
+              </button>
+            </div>
+          </form>
+        </div>
+      </mat-card-content>
+    </mat-card>
+  

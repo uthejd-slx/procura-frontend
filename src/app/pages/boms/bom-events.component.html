@@ -1,0 +1,32 @@
+    <mat-card>
+      <mat-card-title>
+        <div class="pt-row" style="align-items:center; gap: 10px">
+          <span>BOM Events</span>
+          <span class="pt-muted" *ngIf="bomId">#{{ bomId }}</span>
+          <span style="flex: 1 1 auto"></span>
+          <a mat-button color="primary" [routerLink]="['/boms', bomId]">Back</a>
+          <button mat-stroked-button color="primary" (click)="reload()" [disabled]="loading()">
+            Reload
+          </button>
+        </div>
+      </mat-card-title>
+      <mat-card-content>
+        <div *ngIf="loading()" class="pt-row" style="gap:12px; align-items:center">
+          
+          <span>No data available</span>
+        </div>
+
+        <div *ngIf="!loading() && events().length === 0" class="pt-muted">No events found.</div>
+
+        <div *ngFor="let e of events()" class="pt-event">
+          <div class="pt-row" style="gap: 10px; align-items: baseline; flex-wrap: wrap">
+            <div class="pt-title">{{ e.event_type }}</div>
+            <div class="pt-muted">{{ e.created_at | date: 'medium' }}</div>
+            <div class="pt-muted" *ngIf="e.actor !== null">actor #{{ e.actor }}</div>
+          </div>
+          <div class="pt-body" *ngIf="e.message">{{ e.message }}</div>
+          <pre class="pt-data" *ngIf="e.data && showData">{{ e.data | json }}</pre>
+        </div>
+      </mat-card-content>
+    </mat-card>
+  

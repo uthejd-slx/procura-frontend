@@ -1,0 +1,85 @@
+    <div class="pt-page" *ngIf="transfer() as transfer">
+      <div class="pt-header">
+        <div>
+          <div class="pt-title" data-tutorial="transfer-detail">Transfer #{{ transfer.id }}</div>
+          <div class="pt-muted">Partner: {{ partnerName(transfer.partner) }} ? Status: {{ transfer.status }}</div>
+        </div>
+        <div class="pt-actions">
+          <button mat-stroked-button color="primary" routerLink="/transfers">
+            <mat-icon>arrow_back</mat-icon>
+            Back
+          </button>
+          <button mat-raised-button color="primary" type="button" (click)="submit()" [disabled]="!isProcurement() || transfer.status !== 'DRAFT'">
+            Submit
+          </button>
+          <button mat-button color="primary" type="button" (click)="approve()" [disabled]="!isApprover() || transfer.status !== 'SUBMITTED'">
+            Approve
+          </button>
+          <button mat-button color="primary" type="button" (click)="complete()" [disabled]="!isProcurement() || transfer.status !== 'APPROVED'">
+            Complete
+          </button>
+          <button mat-button color="primary" type="button" (click)="cancel()" [disabled]="!isProcurement() || transfer.status === 'CANCELED'">
+            Cancel
+          </button>
+        </div>
+      </div>
+
+      <div class="pt-grid">
+        <mat-card class="pt-panel">
+          <mat-card-title>Transfer items</mat-card-title>
+          <mat-card-content>
+            <table mat-table [dataSource]="transfer.items" class="pt-table">
+              <ng-container matColumnDef="asset">
+                <th mat-header-cell *matHeaderCellDef>Asset</th>
+                <td mat-cell *matCellDef="let item">
+                  <div class="pt-strong">{{ itemLabel(item) }}</div>
+                  <div class="pt-muted">Available {{ item.asset.available_quantity }} {{ item.asset.unit }}</div>
+                </td>
+              </ng-container>
+
+              <ng-container matColumnDef="quantity">
+                <th mat-header-cell *matHeaderCellDef>Qty</th>
+                <td mat-cell *matCellDef="let item">{{ item.quantity }} {{ item.asset.unit }}</td>
+              </ng-container>
+
+              <ng-container matColumnDef="notes">
+                <th mat-header-cell *matHeaderCellDef>Notes</th>
+                <td mat-cell *matCellDef="let item">{{ item.notes || '?' }}</td>
+              </ng-container>
+
+              <tr mat-header-row *matHeaderRowDef="itemColumns"></tr>
+              <tr mat-row *matRowDef="let row; columns: itemColumns"></tr>
+            </table>
+            <div *ngIf="transfer.items.length === 0" class="pt-muted">No data available</div>
+          </mat-card-content>
+        </mat-card>
+
+        <mat-card class="pt-panel">
+          <mat-card-title>Add asset</mat-card-title>
+          <mat-card-content>
+            <div class="pt-muted" *ngIf="!isProcurement()">Procurement role required.</div>
+            <mat-form-field appearance="outline" class="pt-search">
+              <mat-icon matPrefix>search</mat-icon>
+              <input matInput placeholder="Search assets" [formControl]="assetSearch" />
+            </mat-form-field>
+            <form class="pt-form" [formGroup]="addItemForm" (ngSubmit)="addItem()">
+              <mat-form-field appearance="outline">
+                <mat-select placeholder="Asset" formControlName="asset">
+                  <mat-option *ngFor="let asset of assets()" [value]="asset.id">{{ assetLabel(asset) }}</mat-option>
+                </mat-select>
+              </mat-form-field>
+              <mat-form-field appearance="outline">
+                <input matInput placeholder="Quantity" formControlName="quantity" />
+              </mat-form-field>
+              <mat-form-field appearance="outline">
+                <textarea matInput rows="2" placeholder="Notes" formControlName="notes"></textarea>
+              </mat-form-field>
+              <button mat-raised-button color="primary" type="submit" [disabled]="!isProcurement()">Add item</button>
+            </form>
+          </mat-card-content>
+        </mat-card>
+      </div>
+    </div>
+
+    <div *ngIf="loading()" class="pt-muted">No data available</div>
+  

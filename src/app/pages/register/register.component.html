@@ -1,0 +1,66 @@
+    <app-auth-shell headline="Create account" subhead="Use your email and password to get started.">
+      <form class="auth-form" [formGroup]="form" (ngSubmit)="submit()">
+        <mat-form-field appearance="outline" class="auth-field">
+          <mat-label>Email</mat-label>
+          <input matInput formControlName="email" type="email" autocomplete="email" />
+          <mat-error *ngIf="form.controls.email.touched && form.controls.email.hasError('required')">
+            Email is required
+          </mat-error>
+          <mat-error *ngIf="form.controls.email.touched && form.controls.email.hasError('email')">
+            Enter a valid email address
+          </mat-error>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="auth-field">
+          <mat-label>Password</mat-label>
+          <input
+            matInput
+            formControlName="password"
+            [type]="hidePassword ? 'password' : 'text'"
+            autocomplete="new-password"
+          />
+          <button mat-icon-button matSuffix type="button" (click)="hidePassword = !hidePassword">
+            <mat-icon>{{ hidePassword ? 'visibility' : 'visibility_off' }}</mat-icon>
+          </button>
+          <mat-error *ngIf="form.controls.password.touched && form.controls.password.hasError('required')">
+            Password is required
+          </mat-error>
+          <mat-error *ngIf="form.controls.password.touched && form.controls.password.hasError('minlength')">
+            Password must be at least 8 characters
+          </mat-error>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="auth-field">
+          <mat-label>Confirm password</mat-label>
+          <input
+            matInput
+            formControlName="confirmPassword"
+            [type]="hideConfirmPassword ? 'password' : 'text'"
+            autocomplete="new-password"
+          />
+          <button mat-icon-button matSuffix type="button" (click)="hideConfirmPassword = !hideConfirmPassword">
+            <mat-icon>{{ hideConfirmPassword ? 'visibility' : 'visibility_off' }}</mat-icon>
+          </button>
+          <mat-error *ngIf="form.controls.confirmPassword.touched && form.controls.confirmPassword.hasError('required')">
+            Confirm password is required
+          </mat-error>
+          <mat-error *ngIf="form.controls.confirmPassword.touched && form.hasError('passwordMismatch')">
+            Passwords do not match
+          </mat-error>
+        </mat-form-field>
+
+        <button class="auth-primary-btn" mat-raised-button type="submit" [disabled]="form.invalid || loading">
+          <span *ngIf="!loading">Create account</span>
+          <span *ngIf="loading" class="auth-loading">
+            
+            Creating...
+          </span>
+        </button>
+
+        <p class="auth-footer">
+          Already have an account?
+          <a class="auth-link" routerLink="/login">Login</a>
+        </p>
+      </form>
+    </app-auth-shell>
+  

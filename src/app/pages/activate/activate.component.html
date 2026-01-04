@@ -1,0 +1,11 @@
+    <app-auth-shell headline="Account activation" subhead="We're verifying your activation link.">
+      <div class="auth-form">
+        <div *ngIf="loading" class="auth-loading-row">
+          
+          <span>Activating...</span>
+        </div>
+        <p *ngIf="!loading" style="margin: 0 0 12px">{{ message }}</p>
+        <a mat-button class="auth-link" routerLink="/login">Go to login</a>
+      </div>
+    </app-auth-shell>
+  

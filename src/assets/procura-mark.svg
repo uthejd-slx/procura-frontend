@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" role="img" aria-label="procura">
+  <rect x="2.5" y="2.5" width="19" height="19" rx="6" fill="none" stroke="currentColor" stroke-width="2" />
+  <path
+    fill="currentColor"
+    d="M10 16V8h4a3 3 0 0 1 0 6h-2v2h-2Zm2-6v2h2a1 1 0 0 0 0-2h-2Z"
+  />
+</svg>
+

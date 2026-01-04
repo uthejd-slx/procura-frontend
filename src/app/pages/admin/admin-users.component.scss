@@ -1,0 +1,110 @@
+      .pt-row {
+        display: flex;
+      }
+
+      .pt-muted {
+        opacity: 0.75;
+      }
+
+      .pt-title {
+        font-weight: 600;
+      }
+
+      .pt-table {
+        width: 100%;
+      }
+      .pt-table-toolbar {
+        margin: 12px 0 18px;
+        gap: 10px;
+        align-items: center;
+      }
+      .pt-search {
+        min-width: 220px;
+      }
+
+      .pt-edit {
+        display: grid;
+        grid-template-columns: minmax(150px, 0.22fr) auto;
+        gap: 10px;
+        align-items: center;
+      }
+
+      .pt-edit-field {
+        display: grid;
+        gap: 4px;
+      }
+
+      .pt-role-select {
+        width: 100%;
+        min-width: 150px;
+      }
+
+      .pt-edit-actions {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        flex-wrap: wrap;
+      }
+
+      .pt-toggle-shell {
+        display: inline-flex;
+        align-items: center;
+        padding: 6px 10px;
+        border-radius: 999px;
+        border: var(--pt-card-border);
+        background: var(--pt-card-bg);
+      }
+
+      .pt-save-btn {
+        border-radius: 12px;
+        height: 36px;
+        padding: 0 16px;
+        box-shadow: none;
+      }
+
+      :host ::ng-deep .pt-role-select .mat-mdc-form-field-flex {
+        align-items: center;
+      }
+
+      :host ::ng-deep .pt-role-select .mdc-text-field {
+        --mdc-outlined-text-field-container-height: 36px;
+      }
+
+      :host ::ng-deep .pt-role-select .mat-mdc-text-field-wrapper {
+        padding: 0 10px;
+      }
+
+      :host ::ng-deep .pt-role-select .mat-mdc-form-field-infix {
+        padding-top: 6px;
+        padding-bottom: 6px;
+        min-height: 36px;
+      }
+      :host ::ng-deep .pt-search .mdc-text-field {
+        --mdc-outlined-text-field-container-height: 36px;
+      }
+      :host ::ng-deep .pt-search .mat-mdc-text-field-wrapper {
+        padding: 0 10px;
+      }
+      :host ::ng-deep .pt-search .mat-mdc-form-field-infix {
+        padding-top: 6px;
+        padding-bottom: 6px;
+        min-height: 36px;
+      }
+
+      :host ::ng-deep .pt-toggle-shell .mdc-label {
+        font-weight: 600;
+      }
+      :host ::ng-deep .pt-toggle-shell .mdc-switch__icons,
+      :host ::ng-deep .pt-toggle-shell .mdc-switch__icon {
+        display: none;
+      }
+
+      :host ::ng-deep .mat-mdc-form-field-subscript-wrapper {
+        display: none;
+      }
+
+      @media (max-width: 980px) {
+        .pt-edit {
+          grid-template-columns: 1fr;
+        }
+      }
