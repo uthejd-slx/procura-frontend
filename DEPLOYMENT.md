@@ -16,6 +16,8 @@ Release deployments run from GitHub Release events (not on push). The workflow b
 4. Update `/home/ubuntu/procura_frontend/.env.prod`:
    - `FRONTEND_PORT=80` (preferred). The deploy script auto-falls back to `8080` if port 80 is busy.
 
+If port 80 is in use, access the app at `http://<server-ip>:8080/`.
+
 ## GitHub Actions release deploy
 
 Create a GitHub Release (tag) to trigger the workflow:

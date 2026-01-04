@@ -67,9 +67,18 @@ jobs:
             set -euo pipefail
             DEPLOY_PATH="${DEPLOY_PATH:-/home/ubuntu/procura_frontend}"
             API_BASE_URL="${API_BASE_URL:-http://128.199.25.59:8001}"
+            FRONTEND_PORT="${FRONTEND_PORT:-80}"
             if ! mkdir -p "$DEPLOY_PATH"; then
               sudo mkdir -p "$DEPLOY_PATH"
               sudo chown -R "$USER":"$USER" "$DEPLOY_PATH"
+            fi
+            if ss -ltn | grep -q ":${FRONTEND_PORT} "; then
+              if [ "${FRONTEND_PORT}" = "80" ]; then
+                FRONTEND_PORT=8080
+              else
+                echo "Port ${FRONTEND_PORT} is already in use."
+                exit 1
+              fi
             fi
             cat > "$DEPLOY_PATH/docker-compose.prod.yml" <<'EOF'
             services:
@@ -82,10 +91,13 @@ jobs:
                   - "${FRONTEND_PORT:-8080}:80"
             EOF
 
-            cat > "$DEPLOY_PATH/.env.prod" <<EOF
-            FRONTEND_PORT=80
+            touch "$DEPLOY_PATH/.env.prod"
+            grep -vE '^(FRONTEND_PORT|API_BASE_URL)=' "$DEPLOY_PATH/.env.prod" > "$DEPLOY_PATH/.env.prod.tmp" || true
+            cat >> "$DEPLOY_PATH/.env.prod.tmp" <<EOF
+            FRONTEND_PORT=${FRONTEND_PORT}
             API_BASE_URL=${API_BASE_URL}
             EOF
+            mv "$DEPLOY_PATH/.env.prod.tmp" "$DEPLOY_PATH/.env.prod"
             cd "$DEPLOY_PATH"
 
             PREV_TAG=""
@@ -97,20 +109,6 @@ jobs:
               set -a
               . ./.env.prod
               set +a
-            fi
-
-            FRONTEND_PORT="${FRONTEND_PORT:-80}"
-            if ss -ltn | grep -q ":${FRONTEND_PORT} "; then
-              if [ "${FRONTEND_PORT}" = "80" ]; then
-                FRONTEND_PORT=8080
-              else
-                echo "Port ${FRONTEND_PORT} is already in use."
-                exit 1
-              fi
-            fi
-            if ss -ltn | grep -q ":${FRONTEND_PORT} "; then
-              echo "Port ${FRONTEND_PORT} is already in use."
-              exit 1
             fi
 
             export DOCKERHUB_USERNAME="${{ secrets.DOCKERHUB_USERNAME }}"
