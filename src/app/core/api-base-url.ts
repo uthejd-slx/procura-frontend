@@ -1,12 +1,20 @@
 import { InjectionToken } from '@angular/core';
 
-const API_BASE_PLACEHOLDER = '__API_BASE_URL__';
+type RuntimeConfig = {
+  apiBaseUrl?: string;
+};
+
 const FALLBACK_BASE = 'http://localhost:8001';
 
+const readRuntimeConfig = (): string | null => {
+  if (typeof window === 'undefined') return null;
+  const config = (window as typeof window & { __APP_CONFIG__?: RuntimeConfig }).__APP_CONFIG__;
+  return config?.apiBaseUrl ?? null;
+};
+
 const resolveApiBase = (): string => {
-  const raw = API_BASE_PLACEHOLDER;
-  const base = raw && raw !== API_BASE_PLACEHOLDER ? raw : FALLBACK_BASE;
-  const normalized = base.replace(/\/$/, '');
+  const raw = readRuntimeConfig() || FALLBACK_BASE;
+  const normalized = raw.replace(/\/$/, '');
   return normalized.endsWith('/api') ? normalized : `${normalized}/api`;
 };
 

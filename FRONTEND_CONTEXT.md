@@ -11,9 +11,9 @@ This document is the canonical reference for frontend-backend integration during
 
 ## Local Dev
 - Run frontend: `npm run start` (Angular dev server on `http://localhost:4200`)
-- API base URL is injected at build time via `API_BASE_URL` (Docker build arg).
+- API base URL is injected at runtime via `/assets/runtime-config.js`.
   - Default fallback (local): `http://localhost:8001/api`
-  - Production builds set the base in `.github/workflows/release-deploy.yml`
+  - Production uses `.env.prod` `API_BASE_URL` and the nginx entrypoint writes it on container start.
 - Docker image serves the Angular `dist/frontend/browser` output (application builder) via nginx.
 
 ## Demo Automation

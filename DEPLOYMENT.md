@@ -28,14 +28,14 @@ Create a GitHub Release (tag) to trigger the workflow:
 - On success, the tag is written to `.last_deploy_tag`
 - On failure, it rolls back to the previous tag if available
 
-## API base URL (build-time)
+## API base URL (runtime)
 
-The Angular build uses a build-time API base URL. Update it in the workflow and cut a new release:
-- File: `.github/workflows/release-deploy.yml`
+The frontend reads `API_BASE_URL` at container start. Update `.env.prod` and restart the container:
+- File: `/home/ubuntu/procura_frontend/.env.prod`
 - Variable: `API_BASE_URL`
-- Current value: `http://128.199.25.59:8001`
+- Example: `API_BASE_URL=http://128.199.25.59:8001`
 
-The value is injected at build time into `src/app/core/api-base-url.ts`.
+This writes the value into `/usr/share/nginx/html/assets/runtime-config.js` on container start.
 
 ## Secrets (GitHub Actions)
 

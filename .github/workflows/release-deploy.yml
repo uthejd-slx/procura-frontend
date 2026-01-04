@@ -33,8 +33,6 @@ jobs:
           tags: |
             ${{ secrets.DOCKERHUB_USERNAME }}/procura-frontend:${{ github.ref_name }}
             ${{ secrets.DOCKERHUB_USERNAME }}/procura-frontend:latest
-          build-args: |
-            API_BASE_URL=${{ env.API_BASE_URL }}
 
       - name: Ensure deploy directory
         uses: appleboy/ssh-action@v1.0.3
