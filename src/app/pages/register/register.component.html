@@ -28,6 +28,12 @@
           <mat-error *ngIf="form.controls.password.touched && form.controls.password.hasError('minlength')">
             Password must be at least 8 characters
           </mat-error>
+          <mat-error *ngIf="form.controls.password.touched && form.controls.password.hasError('numericOnly')">
+            Password cannot be only numbers
+          </mat-error>
+          <mat-error *ngIf="form.controls.password.touched && form.controls.password.hasError('server')">
+            {{ form.controls.password.getError('server') }}
+          </mat-error>
         </mat-form-field>
 
         <mat-form-field appearance="outline" class="auth-field">

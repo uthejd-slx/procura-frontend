@@ -1,5 +1,5 @@
 import { NgIf } from '@angular/common';
-import { Component, inject } from '@angular/core';
+import { Component, DestroyRef, inject } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { AbstractControl, FormBuilder, ReactiveFormsModule, ValidationErrors, Validators } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
@@ -10,6 +10,7 @@ import { MatInputModule } from '@angular/material/input';
 import { AuthService } from '../../core/auth.service';
 import { NotificationPanelService } from '../../core/notification-panel.service';
 import { AuthShellComponent } from '../auth-shell/auth-shell.component';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
 @Component({
   selector: 'app-reset-confirm',
@@ -32,6 +33,7 @@ export class ResetConfirmComponent {
   private readonly auth = inject(AuthService);
   private readonly fb = inject(FormBuilder);
   private readonly notify = inject(NotificationPanelService);
+  private readonly destroyRef = inject(DestroyRef);
 
   loading = false;
   linkValid = false;
@@ -42,7 +44,7 @@ export class ResetConfirmComponent {
 
   form = this.fb.group(
     {
-      password: ['', [Validators.required, Validators.minLength(8)]],
+      password: ['', [Validators.required, Validators.minLength(8), ResetConfirmComponent.numericOnlyValidator]],
       confirmPassword: ['', [Validators.required]]
     },
     {
@@ -57,6 +59,19 @@ export class ResetConfirmComponent {
     return password === confirmPassword ? null : { passwordMismatch: true };
   }
 
+  private static numericOnlyValidator(control: AbstractControl): ValidationErrors | null {
+    const value = (control.value as string | null) ?? '';
+    if (!value) return null;
+    return /^\d+$/.test(value) ? { numericOnly: true } : null;
+  }
+
+  private extractPasswordError(err: any): string | null {
+    const passwordError = err?.error?.password;
+    if (Array.isArray(passwordError) && passwordError.length) return String(passwordError[0]);
+    if (typeof passwordError === 'string') return passwordError;
+    return null;
+  }
+
   ngOnInit(): void {
     this.uid = this.route.snapshot.queryParamMap.get('uid') || '';
     this.token = this.route.snapshot.queryParamMap.get('token') || '';
@@ -65,6 +80,14 @@ export class ResetConfirmComponent {
     this.auth.validateReset(this.uid, this.token).subscribe({
       next: () => (this.linkValid = true),
       error: () => (this.linkValid = false)
+    });
+
+    this.form.controls.password.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => {
+      const errors = this.form.controls.password.errors;
+      if (errors && errors['server']) {
+        const { server, ...rest } = errors;
+        this.form.controls.password.setErrors(Object.keys(rest).length ? rest : null);
+      }
     });
   }
 
@@ -78,9 +101,17 @@ export class ResetConfirmComponent {
         this.notify.success('Password updated');
         this.linkValid = false;
       },
-      error: () => {
+      error: (err) => {
         this.loading = false;
-        this.notify.error('Reset failed');
+        const passwordMsg = this.extractPasswordError(err);
+        if (passwordMsg) {
+          this.form.controls.password.setErrors({
+            ...(this.form.controls.password.errors || {}),
+            server: passwordMsg
+          });
+        }
+        const msg = passwordMsg || err?.error?.detail || 'Reset failed';
+        this.notify.error(msg);
       }
     });
   }
