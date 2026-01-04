@@ -5,7 +5,7 @@ Release deployments run from GitHub Release events (not on push). The workflow b
 ## One-time server setup
 
 1. SSH into the droplet and create the deploy directory:
-   `mkdir -p /home/ubuntu/procura_frontend`
+   `mkdir -p ~/procura_frontend`
 2. Ensure Docker + Docker Compose are installed.
 3. Decide which port to expose:
    - Preferred: `80` if available.
@@ -17,7 +17,7 @@ Release deployments run from GitHub Release events (not on push). The workflow b
 
 Create a GitHub Release (tag) to trigger the workflow:
 - Image tags: `${DOCKERHUB_USERNAME}/procura-frontend:${TAG}` and `latest`
-- Deploy path: `/home/ubuntu/procura_frontend`
+- Deploy path: `~/procura_frontend`
 - Health check: `curl --fail http://localhost:${FRONTEND_PORT}/`
 - On success, the tag is written to `.last_deploy_tag`
 - On failure, it rolls back to the previous tag if available
@@ -49,7 +49,7 @@ If you need to deploy manually on the server:
    - `export DOCKERHUB_USERNAME=...`
    - `export IMAGE_TAG=...`
 2. Run:
-   - `docker compose -f /home/ubuntu/procura_frontend/docker-compose.prod.yml pull web`
-   - `docker compose -f /home/ubuntu/procura_frontend/docker-compose.prod.yml up -d web`
+   - `docker compose -f ~/procura_frontend/docker-compose.prod.yml pull web`
+   - `docker compose -f ~/procura_frontend/docker-compose.prod.yml up -d web`
 3. Check:
    - `curl --fail http://localhost:${FRONTEND_PORT}/`

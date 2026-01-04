@@ -44,7 +44,7 @@ jobs:
           passphrase: ${{ secrets.PROD_SERVER_SSH_PASSPHRASE }}
           port: ${{ secrets.PROD_SERVER_SSH_PORT }}
           script: |
-            mkdir -p /home/ubuntu/procura_frontend
+            mkdir -p "$HOME/procura_frontend"
 
       - name: Upload compose files
         uses: appleboy/scp-action@v0.1.7
@@ -55,7 +55,7 @@ jobs:
           passphrase: ${{ secrets.PROD_SERVER_SSH_PASSPHRASE }}
           port: ${{ secrets.PROD_SERVER_SSH_PORT }}
           source: "docker-compose.prod.yml,.env.prod"
-          target: "/home/ubuntu/procura_frontend"
+          target: "~/procura_frontend"
 
       - name: Deploy
         uses: appleboy/ssh-action@v1.0.3
@@ -67,8 +67,8 @@ jobs:
           port: ${{ secrets.PROD_SERVER_SSH_PORT }}
           script: |
             set -euo pipefail
-            mkdir -p /home/ubuntu/procura_frontend
-            cd /home/ubuntu/procura_frontend
+            mkdir -p "$HOME/procura_frontend"
+            cd "$HOME/procura_frontend"
 
             PREV_TAG=""
             if [ -f .last_deploy_tag ]; then
