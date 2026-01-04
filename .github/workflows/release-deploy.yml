@@ -44,13 +44,10 @@ jobs:
           port: ${{ secrets.PROD_SERVER_SSH_PORT }}
           script: |
             DEPLOY_PATH="${DEPLOY_PATH:-/home/ubuntu/procura_frontend}"
-            UPLOAD_PATH="${UPLOAD_PATH:-/tmp/procura_frontend_upload}"
             if ! mkdir -p "$DEPLOY_PATH"; then
               sudo mkdir -p "$DEPLOY_PATH"
               sudo chown -R "$USER":"$USER" "$DEPLOY_PATH"
             fi
-            mkdir -p "$UPLOAD_PATH"
-            chmod 777 "$UPLOAD_PATH"
 
       - name: Deploy
         uses: appleboy/ssh-action@v1.0.3
@@ -66,6 +63,9 @@ jobs:
             DEPLOY_PATH="${DEPLOY_PATH:-/home/ubuntu/procura_frontend}"
             API_BASE_URL="${API_BASE_URL:-http://128.199.25.59:8001}"
             FRONTEND_PORT="${FRONTEND_PORT:-80}"
+            DOCKERHUB_USERNAME="${{ secrets.DOCKERHUB_USERNAME }}"
+            IMAGE_TAG="${{ github.ref_name }}"
+            APP_VERSION="${{ github.ref_name }}"
             if ! mkdir -p "$DEPLOY_PATH"; then
               sudo mkdir -p "$DEPLOY_PATH"
               sudo chown -R "$USER":"$USER" "$DEPLOY_PATH"
@@ -89,11 +89,17 @@ jobs:
                   - "${FRONTEND_PORT:-8080}:80"
             EOF
 
+            cat > "$DEPLOY_PATH/.env.compose" <<EOF
+            DOCKERHUB_USERNAME=${DOCKERHUB_USERNAME}
+            IMAGE_TAG=${IMAGE_TAG}
+            EOF
+
             touch "$DEPLOY_PATH/.env.prod"
-            grep -vE '^(FRONTEND_PORT|API_BASE_URL)=' "$DEPLOY_PATH/.env.prod" > "$DEPLOY_PATH/.env.prod.tmp" || true
+            grep -vE '^(FRONTEND_PORT|API_BASE_URL|APP_VERSION)=' "$DEPLOY_PATH/.env.prod" > "$DEPLOY_PATH/.env.prod.tmp" || true
             cat >> "$DEPLOY_PATH/.env.prod.tmp" <<EOF
             FRONTEND_PORT=${FRONTEND_PORT}
             API_BASE_URL=${API_BASE_URL}
+            APP_VERSION=${APP_VERSION}
             EOF
             mv "$DEPLOY_PATH/.env.prod.tmp" "$DEPLOY_PATH/.env.prod"
             cd "$DEPLOY_PATH"
@@ -109,11 +115,9 @@ jobs:
               set +a
             fi
 
-            export DOCKERHUB_USERNAME="${{ secrets.DOCKERHUB_USERNAME }}"
-            export IMAGE_TAG="${{ github.ref_name }}"
-
-            docker compose -f docker-compose.prod.yml pull web
-            docker compose -f docker-compose.prod.yml up -d web
+            docker image rm "${DOCKERHUB_USERNAME}/procura-frontend:${IMAGE_TAG}" || true
+            docker compose --env-file .env.compose -f docker-compose.prod.yml pull web
+            docker compose --env-file .env.compose -f docker-compose.prod.yml up -d --pull always --force-recreate web
             sleep 3
 
             if curl --fail "http://localhost:${FRONTEND_PORT}/" >/dev/null; then
@@ -122,9 +126,14 @@ jobs:
             fi
 
             if [ -n "$PREV_TAG" ]; then
-              export IMAGE_TAG="$PREV_TAG"
-              docker compose -f docker-compose.prod.yml pull web
-              docker compose -f docker-compose.prod.yml up -d web
+              IMAGE_TAG="$PREV_TAG"
+              docker image rm "${DOCKERHUB_USERNAME}/procura-frontend:${IMAGE_TAG}" || true
+              cat > "$DEPLOY_PATH/.env.compose" <<EOF
+            DOCKERHUB_USERNAME=${DOCKERHUB_USERNAME}
+            IMAGE_TAG=${IMAGE_TAG}
+            EOF
+              docker compose --env-file .env.compose -f docker-compose.prod.yml pull web
+              docker compose --env-file .env.compose -f docker-compose.prod.yml up -d --pull always --force-recreate web
               sleep 3
               curl --fail "http://localhost:${FRONTEND_PORT}/" >/dev/null
             fi

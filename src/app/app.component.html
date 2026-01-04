@@ -119,6 +119,10 @@
   <router-outlet></router-outlet>
 </ng-template>
 
+<div class="app-footer">
+  © Procura - Slicktronix {{ currentYear }} - {{ appVersion() }}
+</div>
+
 <mat-menu #userMenu="matMenu">
   <button mat-menu-item routerLink="/profile">
     <mat-icon class="menu-icon">person</mat-icon>

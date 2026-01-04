@@ -24,6 +24,7 @@ import { NotificationPanelService } from './core/notification-panel.service';
 import { FeedbackDialogService } from './core/feedback-dialog.service';
 import { TutorialService } from './core/tutorial.service';
 import { TutorialOverlayComponent } from './components/tutorial-overlay/tutorial-overlay.component';
+import { resolveAppVersion } from './core/api-base-url';
 import type { ApiUser } from './core/types';
 
 @Component({
@@ -72,6 +73,8 @@ export class AppComponent {
   readonly isAuthRoute = signal(false);
   readonly isLoading = computed(() => this.loading.isLoading());
   readonly unreadCount = computed(() => this.notifications.unreadCount());
+  readonly currentYear = new Date().getFullYear();
+  readonly appVersion = computed(() => resolveAppVersion());
   readonly userAvatarSrc = computed(() => {
     const user = this.user$();
     if (!user) return '';

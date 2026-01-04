@@ -14,6 +14,7 @@ This document is the canonical reference for frontend-backend integration during
 - API base URL is injected at runtime via `/assets/runtime-config.js`.
   - Default fallback (local): `http://localhost:8001/api`
   - Production uses `.env.prod` `API_BASE_URL` and the nginx entrypoint writes it on container start.
+- Runtime config also includes `appVersion` (from `.env.prod` `APP_VERSION`) for the footer.
 - Docker image serves the Angular `dist/frontend/browser` output (application builder) via nginx.
 
 ## Demo Automation

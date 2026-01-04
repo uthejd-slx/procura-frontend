@@ -37,6 +37,17 @@ The frontend reads `API_BASE_URL` at container start. Update `.env.prod` and res
 
 This writes the value into `/usr/share/nginx/html/assets/runtime-config.js` on container start.
 
+The workflow also writes `APP_VERSION` (release tag) into `.env.prod` so the footer can display the deployed version.
+
+## Tracking deployed release tags
+
+The deploy workflow writes a compose env file and a tag marker:
+- `/home/ubuntu/procura_frontend/.env.compose` contains `DOCKERHUB_USERNAME` + `IMAGE_TAG`.
+- `/home/ubuntu/procura_frontend/.last_deploy_tag` stores the last successful release tag.
+
+To check which release is running:
+`cat /home/ubuntu/procura_frontend/.last_deploy_tag`
+
 ## Secrets (GitHub Actions)
 
 Required secrets:
