@@ -70,10 +70,6 @@ jobs:
               sudo mkdir -p "$DEPLOY_PATH"
               sudo chown -R "$USER":"$USER" "$DEPLOY_PATH"
             fi
-            if ss -ltn | grep -q ":${FRONTEND_PORT} "; then
-              echo "Port ${FRONTEND_PORT} is already in use."
-              exit 1
-            fi
             cat > "$DEPLOY_PATH/docker-compose.prod.yml" <<'EOF'
             services:
               web:
@@ -112,6 +108,11 @@ jobs:
             fi
 
             docker compose --env-file .env.compose -f docker-compose.prod.yml down || true
+
+            if ss -ltn | grep -q ":${FRONTEND_PORT} "; then
+              echo "Port ${FRONTEND_PORT} is already in use."
+              exit 1
+            fi
 
             docker image rm "${DOCKERHUB_USERNAME}/procura-frontend:${IMAGE_TAG}" || true
             docker compose --env-file .env.compose -f docker-compose.prod.yml pull web
