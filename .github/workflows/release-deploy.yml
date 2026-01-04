@@ -62,9 +62,11 @@ jobs:
           key: ${{ secrets.PROD_SERVER_SSH_KEY }}
           passphrase: ${{ secrets.PROD_SERVER_SSH_PASSPHRASE }}
           port: ${{ secrets.PROD_SERVER_SSH_PORT }}
+          envs: API_BASE_URL
           script: |
             set -euo pipefail
             DEPLOY_PATH="${DEPLOY_PATH:-/home/ubuntu/procura_frontend}"
+            API_BASE_URL="${API_BASE_URL:-http://128.199.25.59:8001}"
             if ! mkdir -p "$DEPLOY_PATH"; then
               sudo mkdir -p "$DEPLOY_PATH"
               sudo chown -R "$USER":"$USER" "$DEPLOY_PATH"
