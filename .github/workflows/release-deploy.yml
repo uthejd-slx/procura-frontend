@@ -111,6 +111,8 @@ jobs:
               set +a
             fi
 
+            docker compose --env-file .env.compose -f docker-compose.prod.yml down || true
+
             docker image rm "${DOCKERHUB_USERNAME}/procura-frontend:${IMAGE_TAG}" || true
             docker compose --env-file .env.compose -f docker-compose.prod.yml pull web
             docker compose --env-file .env.compose -f docker-compose.prod.yml up -d --pull always --force-recreate web
