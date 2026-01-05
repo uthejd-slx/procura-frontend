@@ -190,6 +190,25 @@ export class BomsListComponent {
     this.sharedOnly.set(checked);
   }
 
+  canDeleteBom(bom: Bom): boolean {
+    const userId = this.auth.user$()?.id;
+    return !!userId && (bom.owner === userId || this.auth.hasRole('admin'));
+  }
+
+  deleteBom(bom: Bom): void {
+    if (!this.canDeleteBom(bom)) return;
+    if (!confirm(`Delete BOM #${bom.id}? This cannot be undone.`)) return;
+    this.bomService.deleteBom(bom.id).subscribe({
+      next: () => {
+        this.notify.success('BOM deleted');
+        this.reload();
+      },
+      error: (err) => {
+        this.notify.error(err?.error?.detail || 'Failed to delete BOM');
+      }
+    });
+  }
+
   private isSharedBom(bom: Bom, userId: number): boolean {
     const raw = bom as unknown as { collaborators?: number[]; collaborator_ids?: number[]; is_collaborator?: boolean };
     if (raw.is_collaborator) return true;

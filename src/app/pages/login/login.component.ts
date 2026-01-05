@@ -50,7 +50,12 @@ export class LoginComponent {
       },
       error: (err) => {
         this.loading = false;
-        const msg = err?.error?.detail || 'Login failed';
+        const detail = err?.error?.detail as string | undefined;
+        const normalized = (detail || '').toLowerCase();
+        const msg =
+          normalized.includes('no active account') || normalized.includes('unable to log in')
+            ? 'Wrong credentials'
+            : detail || 'Login failed';
         this.notify.error(msg);
       }
     });

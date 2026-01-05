@@ -1,0 +1,19 @@
+<h2 mat-dialog-title>Request for approval</h2>
+<mat-dialog-content>
+  <mat-form-field appearance="outline" class="pt-dialog-field">
+    <mat-label>Procurement approvers</mat-label>
+    <mat-select [formControl]="form.controls.approver_ids" multiple>
+      <mat-option *ngFor="let user of approvers" [value]="user.id">{{ displayUser(user) }}</mat-option>
+    </mat-select>
+  </mat-form-field>
+  <mat-form-field appearance="outline" class="pt-dialog-field">
+    <mat-label>Comment</mat-label>
+    <textarea matInput rows="3" [formControl]="form.controls.comment"></textarea>
+  </mat-form-field>
+</mat-dialog-content>
+<mat-dialog-actions align="end">
+  <button mat-button type="button" (click)="close()">Cancel</button>
+  <button mat-raised-button color="primary" type="button" (click)="submit()">
+    Request for approval
+  </button>
+</mat-dialog-actions>

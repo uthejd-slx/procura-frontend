@@ -5,6 +5,10 @@
           <mat-chip>{{ bom()!.status }}</mat-chip>
           <span style="flex: 1 1 auto"></span>
           <a mat-button color="primary" [routerLink]="['/boms', bom()!.id, 'events']">Events</a>
+          <button mat-stroked-button color="primary" type="button" (click)="deleteBom()" [disabled]="!canDeleteBom() || deletingBom">
+            <mat-icon>delete</mat-icon>
+            Delete
+          </button>
           <button mat-stroked-button color="primary" [matMenuTriggerFor]="downloadMenu">
             <mat-icon>download</mat-icon>
             Download
@@ -12,48 +16,49 @@
         </div>
       </mat-card-title>
       <mat-card-content>
-        <form [formGroup]="metaForm" (ngSubmit)="saveMeta()" class="pt-grid">
-          <mat-form-field appearance="outline">
-            <mat-label>Title</mat-label>
-            <input matInput formControlName="title" [readonly]="!editable()" />
-          </mat-form-field>
-          <mat-form-field appearance="outline">
-            <mat-label>Project</mat-label>
-            <input matInput formControlName="project" [readonly]="!editable()" />
-          </mat-form-field>
-          <div class="pt-row" style="gap: 10px; align-items:center; flex-wrap: wrap">
-            <span class="pt-muted">Updated {{ bom()!.updated_at | date: 'medium' }}</span>
-            <span style="flex: 1 1 auto"></span>
-            <button mat-raised-button color="primary" type="submit" [disabled]="!editable() || savingMeta">
+        <form [formGroup]="metaForm" (ngSubmit)="saveMeta()" class="pt-meta">
+          <div class="pt-meta-row">
+            <mat-form-field appearance="outline" class="pt-meta-field">
+              <mat-label>Title</mat-label>
+              <input matInput formControlName="title" [readonly]="!editable()" />
+            </mat-form-field>
+            <mat-form-field appearance="outline" class="pt-meta-field">
+              <mat-label>Project</mat-label>
+              <input matInput formControlName="project" [readonly]="!editable()" />
+            </mat-form-field>
+            <button
+              mat-icon-button
+              color="primary"
+              type="submit"
+              [disabled]="!editable() || savingMeta"
+              matTooltip="Save"
+            >
               <mat-icon>save</mat-icon>
-              Save
             </button>
-            <button mat-stroked-button color="primary" type="button" (click)="reload()">
+            <button mat-icon-button color="primary" type="button" (click)="reload()" matTooltip="Reload">
               <mat-icon>refresh</mat-icon>
-              Reload
             </button>
+          </div>
+          <div class="pt-meta-sub">
+            <span class="pt-muted">Updated {{ bom()!.updated_at | date: 'medium' }}</span>
           </div>
         </form>
 
         <div class="pt-section">
-          <div class="pt-row" style="align-items:center; gap: 10px">
+          <div class="pt-row" style="align-items:center; gap: 10px; flex-wrap: wrap">
             <div class="pt-h">Collaborators</div>
             <span class="pt-muted">Collaborators can edit and request approvals.</span>
-          </div>
-
-          <div class="pt-grid" style="margin-top: 12px">
-            <mat-form-field appearance="outline" style="grid-column: span 2">
-              <mat-label>Add collaborator</mat-label>
-              <mat-select [formControl]="collabForm.controls.user_id" [disabled]="!canManageCollaborators()">
-                <mat-option *ngFor="let u of availableCollaborators()" [value]="u.id">{{ displayUser(u) }}</mat-option>
-              </mat-select>
-            </mat-form-field>
-            <div class="pt-row" style="gap: 10px; align-items:center; grid-column: span 2; flex-wrap: wrap">
-              <button mat-raised-button color="primary" type="button" (click)="addCollaborator()" [disabled]="!canManageCollaborators() || !collabForm.controls.user_id.value">
-                Add collaborator
-              </button>
-              <span class="pt-muted" *ngIf="!canManageCollaborators()">Only the owner or procurement/admin can add/remove.</span>
-            </div>
+            <span style="flex: 1 1 auto"></span>
+            <button
+              mat-icon-button
+              color="primary"
+              type="button"
+              matTooltip="Add collaborator"
+              (click)="openCollaboratorDialog()"
+              [disabled]="!canManageCollaborators()"
+            >
+              <mat-icon>person_add</mat-icon>
+            </button>
           </div>
 
           <div class="pt-row" style="gap:12px; align-items:center; margin-top: 12px" *ngIf="loadingCollaborators()">
@@ -89,67 +94,50 @@
             </button>
           </div>
 
-          <form *ngIf="showAddItem" [formGroup]="itemForm" (ngSubmit)="addItem()" class="pt-grid" style="margin-top: 12px">
-            <div class="pt-row" style="gap: 10px; align-items:center; grid-column: span 2; flex-wrap: wrap">
-              <button mat-stroked-button color="primary" type="button" (click)="openCatalogPicker()" [disabled]="!editable()">
-                <mat-icon>library_add</mat-icon>
-                Select from Catalog
-              </button>
-              <div class="pt-muted" *ngIf="selectedCatalog()">
-                Using: <span class="pt-title">{{ selectedCatalog()!.name }}</span>
-                <a *ngIf="selectedCatalog()!.vendor_url" class="pt-link" [href]="selectedCatalog()!.vendor_url" target="_blank" rel="noopener">
-                  Vendor link
-                </a>
-                <button mat-button type="button" (click)="clearCatalogSelection()">Clear</button>
+          <form *ngIf="showAddItem" [formGroup]="itemSchemaForm" (ngSubmit)="addItem()" class="pt-grid" style="margin-top: 12px">
+            <div *ngIf="!itemSchemaFields().length" class="pt-muted" style="grid-column: span 2">
+              No template fields available.
+            </div>
+            <div *ngIf="itemSchemaFields().length" class="pt-field-block" style="grid-column: span 2">
+              <div class="pt-row pt-field-head">
+                <div class="pt-h">Template fields</div>
+                <span class="pt-muted">From the selected template</span>
+              </div>
+              <div class="pt-field-list">
+                <div class="pt-field-row" *ngFor="let field of itemSchemaFields()">
+                  <ng-container *ngIf="schemaControl(field) as ctrl">
+                    <mat-form-field appearance="outline" style="flex: 1 1 220px">
+                      <mat-label>{{ field.label }}</mat-label>
+                      <mat-select *ngIf="fieldType(field) === 'select'" [formControl]="ctrl">
+                        <mat-option *ngFor="let opt of field.options || []" [value]="opt">{{ opt }}</mat-option>
+                      </mat-select>
+                      <mat-select *ngIf="fieldType(field) === 'boolean'" [formControl]="ctrl">
+                        <mat-option [value]="true">Yes</mat-option>
+                        <mat-option [value]="false">No</mat-option>
+                      </mat-select>
+                      <textarea *ngIf="fieldType(field) === 'textarea'" matInput rows="2" [formControl]="ctrl"></textarea>
+                      <input *ngIf="fieldType(field) === 'number'" matInput type="number" [formControl]="ctrl" />
+                      <input *ngIf="fieldType(field) === 'date'" matInput type="date" [formControl]="ctrl" />
+                      <input
+                        *ngIf="fieldType(field) === 'url' || fieldType(field) === 'text'"
+                        matInput
+                        type="text"
+                        [formControl]="ctrl"
+                      />
+                      <input
+                        *ngIf="fieldType(field) !== 'select' && fieldType(field) !== 'boolean' && fieldType(field) !== 'textarea' && fieldType(field) !== 'number' && fieldType(field) !== 'date' && fieldType(field) !== 'url' && fieldType(field) !== 'text'"
+                        matInput
+                        type="text"
+                        [formControl]="ctrl"
+                      />
+                    </mat-form-field>
+                  </ng-container>
+                </div>
               </div>
             </div>
-            <mat-form-field appearance="outline" style="grid-column: span 2">
-              <mat-label>Name</mat-label>
-              <input matInput formControlName="name" />
-            </mat-form-field>
-            <mat-form-field appearance="outline" style="grid-column: span 2">
-              <mat-label>Description</mat-label>
-              <textarea matInput formControlName="description" rows="2"></textarea>
-            </mat-form-field>
-            <mat-form-field appearance="outline">
-              <mat-label>Quantity</mat-label>
-              <input matInput formControlName="quantity" />
-            </mat-form-field>
-            <mat-form-field appearance="outline">
-              <mat-label>Unit</mat-label>
-              <input matInput formControlName="unit" />
-            </mat-form-field>
-            <mat-form-field appearance="outline">
-              <mat-label>Vendor</mat-label>
-              <input matInput formControlName="vendor" />
-            </mat-form-field>
-            <mat-form-field appearance="outline">
-              <mat-label>Category</mat-label>
-              <input matInput formControlName="category" />
-            </mat-form-field>
-            <mat-form-field appearance="outline">
-              <mat-label>Unit price</mat-label>
-              <input matInput formControlName="unit_price" />
-            </mat-form-field>
-            <mat-form-field appearance="outline">
-              <mat-label>Currency</mat-label>
-              <input matInput formControlName="currency" />
-            </mat-form-field>
-            <mat-form-field appearance="outline">
-              <mat-label>Tax %</mat-label>
-              <input matInput formControlName="tax_percent" />
-            </mat-form-field>
-            <mat-form-field appearance="outline" style="grid-column: span 2">
-              <mat-label>Link</mat-label>
-              <input matInput formControlName="link" />
-            </mat-form-field>
-            <mat-form-field appearance="outline" style="grid-column: span 2">
-              <mat-label>Notes</mat-label>
-              <textarea matInput formControlName="notes" rows="3"></textarea>
-            </mat-form-field>
 
             <div class="pt-row" style="gap: 10px; align-items:center; grid-column: span 2; flex-wrap: wrap">
-              <button mat-raised-button color="primary" type="submit" [disabled]="itemForm.invalid || savingItem">
+              <button mat-raised-button color="primary" type="submit" [disabled]="itemSchemaForm.invalid || savingItem">
                 <mat-icon>add</mat-icon>
                 Add
               </button>
@@ -173,7 +161,19 @@
             <ng-container matColumnDef="signoff">
               <th mat-header-cell *matHeaderCellDef>Signoff</th>
               <td mat-cell *matCellDef="let i">
-                <mat-chip>{{ i.signoff_status }}</mat-chip>
+                <div class="pt-row pt-signoff-cell">
+                  <mat-chip>{{ i.signoff_status }}</mat-chip>
+                  <button
+                    mat-icon-button
+                    color="primary"
+                    type="button"
+                    matTooltip="Request signoff"
+                    (click)="openSignoffDialog(i)"
+                    [disabled]="!canRequestWorkflow() || savingSignoff"
+                  >
+                    <mat-icon>task_alt</mat-icon>
+                  </button>
+                </div>
               </td>
             </ng-container>
             <ng-container matColumnDef="received">
@@ -186,71 +186,31 @@
         </div>
 
         <div class="pt-section" data-tutorial="bom-workflow">
-          <div class="pt-h">Workflow</div>
-
-          <div class="pt-grid" style="margin-top: 12px">
-            <mat-form-field appearance="outline">
-              <mat-label>Signoff assignee</mat-label>
-              <mat-select [formControl]="signoffForm.controls.assignee_id" [disabled]="!canRequestWorkflow()">
-                <mat-option *ngFor="let u of users" [value]="u.id">{{ displayUser(u) }}</mat-option>
-              </mat-select>
-            </mat-form-field>
-
-            <mat-form-field appearance="outline">
-              <mat-label>Items (optional)</mat-label>
-              <mat-select [formControl]="signoffForm.controls.item_ids" multiple [disabled]="!canRequestWorkflow()">
-                <mat-option *ngFor="let i of bom()!.items" [value]="i.id">{{ i.name }}</mat-option>
-              </mat-select>
-            </mat-form-field>
-
-            <mat-form-field appearance="outline" style="grid-column: span 2">
-              <mat-label>Signoff comment</mat-label>
-              <textarea matInput [formControl]="signoffForm.controls.comment" rows="2" [disabled]="!canRequestWorkflow()"></textarea>
-            </mat-form-field>
-
-            <div class="pt-row" style="gap: 10px; align-items:center; grid-column: span 2; flex-wrap: wrap">
-              <button mat-raised-button color="primary" type="button" (click)="requestSignoff()" [disabled]="!canRequestWorkflow() || savingSignoff">
-                Request signoff
-              </button>
-              <span class="pt-muted">Owner or collaborator can request signoff.</span>
-            </div>
-          </div>
-
-          <div class="pt-grid" style="margin-top: 18px">
-            <mat-form-field appearance="outline" style="grid-column: span 2">
-              <mat-label>Procurement approvers</mat-label>
-              <mat-select [formControl]="approvalForm.controls.approver_ids" multiple [disabled]="!canRequestWorkflow()">
-                <mat-option *ngFor="let u of approvers()" [value]="u.id">{{ displayUser(u) }}</mat-option>
-              </mat-select>
-            </mat-form-field>
-            <mat-form-field appearance="outline" style="grid-column: span 2">
-              <mat-label>Approval comment</mat-label>
-              <textarea matInput [formControl]="approvalForm.controls.comment" rows="2" [disabled]="!canRequestWorkflow()"></textarea>
-            </mat-form-field>
-            <div class="pt-row" style="gap: 10px; align-items:center; grid-column: span 2; flex-wrap: wrap">
-              <button
-                mat-raised-button
-                color="primary"
-                type="button"
-                (click)="requestApproval()"
-                [disabled]="!canRequestWorkflow() || savingApproval || !approvalForm.controls.approver_ids.value?.length"
-              >
-                Request procurement approval
-              </button>
-              <span class="pt-muted">Owner or collaborator can request approval.</span>
-            </div>
+          <div class="pt-row" style="align-items:center; gap: 10px; flex-wrap: wrap">
+            <div class="pt-h">Workflow</div>
+            <span class="pt-muted">Owner or collaborator can request approvals.</span>
+            <span style="flex: 1 1 auto"></span>
+            <button
+              mat-raised-button
+              color="primary"
+              type="button"
+              (click)="openApprovalDialog()"
+              [disabled]="!canRequestWorkflow() || savingApproval"
+            >
+              Request for approval
+            </button>
           </div>
 
           <div class="pt-grid" style="margin-top: 18px">
             <mat-form-field appearance="outline" style="grid-column: span 2">
               <mat-label>Cancel comment (optional)</mat-label>
-              <textarea matInput [formControl]="cancelForm.controls.comment" rows="2"></textarea>
+              <textarea matInput [formControl]="cancelForm.controls.comment" rows="2" [disabled]="!canCancelFlow()"></textarea>
             </mat-form-field>
             <div class="pt-row" style="gap: 10px; align-items:center; grid-column: span 2; flex-wrap: wrap">
-              <button mat-stroked-button color="primary" type="button" (click)="cancelFlow()" [disabled]="savingCancel || !canCancelFlow()">
-                Cancel flow (back to draft)
+              <button mat-stroked-button color="primary" type="button" (click)="cancelFlow()" [disabled]="!canCancelFlow() || savingCancel">
+                Cancel workflow
               </button>
-              <span class="pt-muted">Only the BOM owner or procurement can cancel.</span>
+              <span class="pt-muted">Owner or procurement can cancel.</span>
             </div>
           </div>
         </div>

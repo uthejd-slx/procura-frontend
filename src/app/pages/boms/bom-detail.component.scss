@@ -7,6 +7,24 @@
         gap: 12px;
         margin-top: 12px;
       }
+      .pt-meta {
+        display: grid;
+        gap: 6px;
+        margin-top: 12px;
+      }
+      .pt-meta-row {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        flex-wrap: wrap;
+      }
+      .pt-meta-field {
+        flex: 1 1 280px;
+        min-width: 200px;
+      }
+      .pt-meta-sub {
+        margin-top: 2px;
+      }
       .pt-muted {
         opacity: 0.75;
       }
@@ -48,9 +66,39 @@
       .pt-link:hover {
         text-decoration: underline;
       }
+      .pt-field-block {
+        border: var(--pt-card-border);
+        border-radius: var(--pt-card-radius);
+        background: var(--pt-card-bg);
+        padding: 12px;
+        display: grid;
+        gap: 10px;
+      }
+      .pt-field-head {
+        align-items: center;
+        gap: 10px;
+        flex-wrap: wrap;
+      }
+      .pt-field-list {
+        display: grid;
+        gap: 10px;
+      }
+      .pt-field-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        align-items: end;
+      }
+      .pt-signoff-cell {
+        align-items: center;
+        gap: 6px;
+      }
       @media (max-width: 900px) {
         .pt-grid {
           grid-template-columns: 1fr;
+        }
+        .pt-meta-row {
+          align-items: flex-start;
         }
       }
     

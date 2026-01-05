@@ -76,7 +76,7 @@ export class BomTemplatesComponent {
 
   reload(): void {
     this.loading = true;
-    this.bomService.listTemplates().subscribe({
+    this.bomService.listTemplates({ page_size: 200 }).subscribe({
       next: (items) => {
         this.templates = this.normalizeTemplates(items);
         this.loading = false;

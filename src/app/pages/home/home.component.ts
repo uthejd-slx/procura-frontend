@@ -46,6 +46,25 @@ export class HomeComponent {
     this.loadRecentBoms();
   }
 
+  canDeleteBom(bom: Bom): boolean {
+    const userId = this.auth.user$()?.id;
+    return !!userId && (bom.owner === userId || this.auth.hasRole('admin'));
+  }
+
+  deleteBom(bom: Bom): void {
+    if (!this.canDeleteBom(bom)) return;
+    if (!confirm(`Delete BOM #${bom.id}? This cannot be undone.`)) return;
+    this.bomService.deleteBom(bom.id).subscribe({
+      next: () => {
+        this.notify.success('BOM deleted');
+        this.loadRecentBoms();
+      },
+      error: (err) => {
+        this.notify.error(err?.error?.detail || 'Failed to delete BOM');
+      }
+    });
+  }
+
   private loadRecentBoms(): void {
     this.loadingBoms = true;
     this.bomService.listBoms({ page_size: 5 }).subscribe({

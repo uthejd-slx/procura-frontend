@@ -1,5 +1,5 @@
 import { inject, Injectable } from '@angular/core';
-import { HttpClient, HttpParams } from '@angular/common/http';
+import { HttpClient, HttpParams, HttpResponse } from '@angular/common/http';
 
 import { API_BASE_URL } from './api-base-url';
 import type { Bom, BomCollaborator, BomEvent, BomItem, BomTemplate, PaginatedResponse, ProcurementApproval } from './types';
@@ -10,8 +10,15 @@ export class BomService {
   private readonly baseUrl = inject(API_BASE_URL);
 
   // Templates
-  listTemplates() {
-    return this.http.get<BomTemplate[]>(`${this.baseUrl}/bom-templates/`);
+  listTemplates(params?: Record<string, string | number | boolean>) {
+    const httpParams = params
+      ? new HttpParams({
+          fromObject: Object.fromEntries(Object.entries(params).map(([key, value]) => [key, String(value)]))
+        })
+      : undefined;
+    return this.http.get<BomTemplate[] | PaginatedResponse<BomTemplate>>(`${this.baseUrl}/bom-templates/`, {
+      params: httpParams
+    });
   }
 
   createTemplate(payload: { name: string; description?: string; schema?: any }) {
@@ -38,11 +45,15 @@ export class BomService {
   }
 
   createBom(payload: { template?: number | null; title: string; project?: string; data?: any }) {
-    return this.http.post<Bom>(`${this.baseUrl}/boms/`, payload);
+    return this.http.post<Bom>(`${this.baseUrl}/boms/`, payload, { observe: 'response' });
   }
 
   updateBom(id: number, payload: Partial<Pick<Bom, 'title' | 'project' | 'data' | 'template'>>) {
     return this.http.patch<Bom>(`${this.baseUrl}/boms/${id}/`, payload);
+  }
+
+  deleteBom(id: number) {
+    return this.http.delete(`${this.baseUrl}/boms/${id}/`);
   }
 
   addItem(bomId: number, payload: Partial<BomItem> & { name: string }) {

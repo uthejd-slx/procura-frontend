@@ -55,4 +55,23 @@
       .pt-field-name {
         font-weight: 600;
       }
+      .pt-create-draft {
+        --mdc-filled-button-container-color: var(--pt-accent);
+        --mdc-filled-button-label-text-color: var(--pt-on-accent);
+        --mdc-filled-button-container-shape: 12px;
+        height: 40px;
+        padding: 0 18px;
+        font-weight: 600;
+        letter-spacing: 0.2px;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+      }
+      .pt-create-draft .mat-icon {
+        margin: 0;
+        line-height: 1;
+      }
+      .pt-create-draft:disabled {
+        opacity: 0.6;
+      }
     

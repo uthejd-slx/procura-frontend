@@ -1,7 +1,7 @@
 import { DatePipe, NgFor, NgIf } from '@angular/common';
 import { Component, computed, inject, signal } from '@angular/core';
-import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { ActivatedRoute, RouterLink } from '@angular/router';
+import { FormBuilder, FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
 import { MatChipsModule } from '@angular/material/chips';
@@ -12,14 +12,16 @@ import { MatMenuModule } from '@angular/material/menu';
 import { MatDialog } from '@angular/material/dialog';
 import { MatSelectModule } from '@angular/material/select';
 import { MatTableModule } from '@angular/material/table';
+import { MatTooltipModule } from '@angular/material/tooltip';
 
 import { AuthService } from '../../core/auth.service';
 import { BomService } from '../../core/bom.service';
-import { CatalogService } from '../../core/catalog.service';
 import { NotificationPanelService } from '../../core/notification-panel.service';
 import { UserDirectoryService } from '../../core/user-directory.service';
-import { CatalogPickerDialogComponent } from './catalog-picker-dialog.component';
-import type { Bom, BomCollaborator, CatalogItem, DirectoryUser } from '../../core/types';
+import { BomApprovalDialogComponent } from './bom-approval-dialog.component';
+import { BomCollaboratorDialogComponent } from './bom-collaborator-dialog.component';
+import { BomSignoffDialogComponent } from './bom-signoff-dialog.component';
+import type { Bom, BomCollaborator, BomItem, BomTemplate, BomTemplateSchemaField, DirectoryUser } from '../../core/types';
 
 @Component({
   selector: 'app-bom-detail',
@@ -38,7 +40,8 @@ import type { Bom, BomCollaborator, CatalogItem, DirectoryUser } from '../../cor
     MatSelectModule,
     MatMenuModule,
     MatButtonModule,
-    MatIconModule
+    MatIconModule,
+    MatTooltipModule
   ],
   templateUrl: './bom-detail.component.html',
   styleUrl: './bom-detail.component.scss',
@@ -46,18 +49,17 @@ import type { Bom, BomCollaborator, CatalogItem, DirectoryUser } from '../../cor
 export class BomDetailComponent {
   private readonly auth = inject(AuthService);
   private readonly bomService = inject(BomService);
-  private readonly catalog = inject(CatalogService);
   private readonly userDirectory = inject(UserDirectoryService);
   private readonly route = inject(ActivatedRoute);
+  private readonly router = inject(Router);
   private readonly notify = inject(NotificationPanelService);
   private readonly fb = inject(FormBuilder);
   private readonly dialog = inject(MatDialog);
 
   readonly bom = signal<Bom | null>(null);
+  readonly template = signal<BomTemplate | null>(null);
   readonly collaborators = signal<BomCollaborator[]>([]);
   readonly loadingCollaborators = signal(false);
-  readonly selectedCatalog = signal<CatalogItem | null>(null);
-  private catalogData: any = null;
   users: DirectoryUser[] = [];
 
   savingMeta = false;
@@ -65,9 +67,14 @@ export class BomDetailComponent {
   savingSignoff = false;
   savingApproval = false;
   savingCancel = false;
+  deletingBom = false;
   showAddItem = false;
 
   readonly itemColumns = ['name', 'qty', 'signoff', 'received'];
+  readonly itemSchemaFields = computed(() => {
+    const fields = this.template()?.schema?.item_fields || [];
+    return this.resolveItemFields(fields);
+  });
 
   readonly editable = computed(() => {
     const b = this.bom();
@@ -101,6 +108,13 @@ export class BomDetailComponent {
     return !!userId && (b.owner === userId || this.auth.hasRole('procurement'));
   });
 
+  readonly canDeleteBom = computed(() => {
+    const b = this.bom();
+    if (!b) return false;
+    const userId = this.auth.user$()?.id;
+    return !!userId && (b.owner === userId || this.auth.hasRole('admin'));
+  });
+
   readonly approvers = computed(() => this.users.filter((u) => (u.roles || []).includes('approver')));
 
   metaForm = this.fb.group({
@@ -108,37 +122,10 @@ export class BomDetailComponent {
     project: ['']
   });
 
-  itemForm = this.fb.group({
-    name: ['', [Validators.required, Validators.maxLength(300)]],
-    description: [''],
-    quantity: ['1'],
-    unit: [''],
-    vendor: [''],
-    category: [''],
-    unit_price: [''],
-    currency: [''],
-    tax_percent: [''],
-    link: [''],
-    notes: ['']
-  });
-
-  signoffForm = this.fb.group({
-    assignee_id: [null as number | null, [Validators.required]],
-    item_ids: [[] as number[]],
-    comment: ['']
-  });
-
-  approvalForm = this.fb.group({
-    approver_ids: [[] as number[]],
-    comment: ['']
-  });
+  itemSchemaForm: FormGroup = this.fb.group({});
 
   cancelForm = this.fb.group({
     comment: ['']
-  });
-
-  collabForm = this.fb.group({
-    user_id: [null as number | null]
   });
 
   ngOnInit(): void {
@@ -173,12 +160,58 @@ export class BomDetailComponent {
       next: (b) => {
         this.bom.set(b);
         this.metaForm.patchValue({ title: b.title, project: b.project || '' });
+        this.syncTemplateForBom(b);
         if (typeof localStorage !== 'undefined') {
           localStorage.setItem('tutorial.lastBomId', String(b.id));
         }
       },
       error: () => this.notify.error('Failed to load BOM')
     });
+  }
+
+  private syncTemplateForBom(b: Bom): void {
+    const templateValue = (b as unknown as { template?: BomTemplate | number | null }).template;
+    if (templateValue && typeof templateValue === 'object') {
+      this.template.set(templateValue);
+      this.itemSchemaForm = this.buildItemSchemaForm(templateValue.schema?.item_fields || []);
+      return;
+    }
+    if (!b.template) {
+      this.template.set(null);
+      this.itemSchemaForm = this.fb.group({});
+      return;
+    }
+    this.bomService.listTemplates({ page_size: 200 }).subscribe({
+      next: (items) => {
+        const templates = this.normalizeTemplates(items);
+        const match = templates.find((t) => t.id === b.template) || null;
+        this.template.set(match);
+        this.itemSchemaForm = this.buildItemSchemaForm(this.resolveItemFields(match?.schema?.item_fields || []));
+      },
+      error: () => {
+        this.template.set(null);
+        this.itemSchemaForm = this.fb.group({});
+      }
+    });
+  }
+
+  private buildItemSchemaForm(fields: BomTemplateSchemaField[]): FormGroup {
+    const controls: Record<string, FormControl<string | boolean | null>> = {};
+    fields
+      .filter((field) => field && field.key)
+      .forEach((field) => {
+        const validators = field.key === 'name' ? [Validators.required] : [];
+        controls[field.key] = this.fb.control('', { validators });
+      });
+    return this.fb.group(controls);
+  }
+
+  private normalizeTemplates(items: unknown): BomTemplate[] {
+    if (Array.isArray(items)) return items;
+    if (items && typeof items === 'object' && Array.isArray((items as any).results)) {
+      return (items as any).results;
+    }
+    return [];
   }
 
   private loadCollaborators(id: number): void {
@@ -226,41 +259,24 @@ export class BomDetailComponent {
   addItem(): void {
     const b = this.bom();
     if (!b || !this.editable()) return;
-    if (this.itemForm.invalid) return;
+    if (this.itemSchemaForm.invalid) return;
     this.savingItem = true;
-    const payload = this.itemForm.getRawValue();
+    const itemSchemaData = this.itemSchemaForm.getRawValue() as Record<string, any>;
+    const mapped = this.mapSchemaToItem(itemSchemaData);
+    if (!mapped.name) {
+      this.savingItem = false;
+      this.notify.error('Item name is required');
+      return;
+    }
+    const dataPayload = this.extractSchemaExtras(itemSchemaData);
     this.bomService.addItem(b.id, {
-      name: payload.name!,
-      description: payload.description || '',
-      quantity: payload.quantity || '1',
-      unit: payload.unit || '',
-      vendor: payload.vendor || '',
-      category: payload.category || '',
-      unit_price: payload.unit_price || null,
-      currency: payload.currency || '',
-      tax_percent: payload.tax_percent || null,
-      link: payload.link || '',
-      notes: payload.notes || '',
-      data: this.catalogData || null
+      ...mapped,
+      data: dataPayload
     } as any).subscribe({
       next: () => {
         this.savingItem = false;
         this.showAddItem = false;
-        this.itemForm.reset({
-          name: '',
-          description: '',
-          quantity: '1',
-          unit: '',
-          vendor: '',
-          category: '',
-          unit_price: '',
-          currency: '',
-          tax_percent: '',
-          link: '',
-          notes: ''
-        });
-        this.selectedCatalog.set(null);
-        this.catalogData = null;
+        this.itemSchemaForm.reset({});
         this.reload();
         this.notify.success('Item added');
       },
@@ -271,36 +287,83 @@ export class BomDetailComponent {
     });
   }
 
-  requestSignoff(): void {
-    const b = this.bom();
-    if (!b || !this.canRequestWorkflow()) return;
-    if (this.signoffForm.invalid) return;
-    this.savingSignoff = true;
-    const { assignee_id, item_ids, comment } = this.signoffForm.getRawValue();
-    this.bomService.requestSignoff(b.id, {
-      assignee_id: assignee_id!,
-      item_ids: item_ids?.length ? item_ids : undefined,
-      comment: comment || ''
-    }).subscribe({
-      next: () => {
-        this.savingSignoff = false;
-        this.notify.success('Signoff requested');
-        this.reload();
-      },
-      error: (err) => {
-        this.savingSignoff = false;
-        this.notify.error(err?.error?.detail || 'Failed to request signoff');
-      }
+  openCollaboratorDialog(): void {
+    if (!this.canManageCollaborators()) return;
+    const ref = this.dialog.open(BomCollaboratorDialogComponent, {
+      panelClass: ['pt-dialog-panel'],
+      width: '420px',
+      maxWidth: '92vw',
+      data: { users: this.availableCollaborators() },
+      autoFocus: false,
+      restoreFocus: false
+    });
+    ref.afterClosed().subscribe((userId: number | undefined) => {
+      if (!userId) return;
+      this.addCollaborator(userId);
     });
   }
 
-  requestApproval(): void {
+  openSignoffDialog(item: BomItem): void {
+    if (!this.canRequestWorkflow()) return;
+    const ref = this.dialog.open(BomSignoffDialogComponent, {
+      panelClass: ['pt-dialog-panel'],
+      width: '480px',
+      maxWidth: '94vw',
+      data: { item, users: this.users },
+      autoFocus: false,
+      restoreFocus: false
+    });
+    ref.afterClosed().subscribe((payload: { assignee_id: number; comment?: string } | undefined) => {
+      if (!payload) return;
+      this.requestSignoffForItem(item, payload);
+    });
+  }
+
+  openApprovalDialog(): void {
+    if (!this.canRequestWorkflow()) return;
+    const ref = this.dialog.open(BomApprovalDialogComponent, {
+      panelClass: ['pt-dialog-panel'],
+      width: '480px',
+      maxWidth: '94vw',
+      data: { approvers: this.approvers() },
+      autoFocus: false,
+      restoreFocus: false
+    });
+    ref.afterClosed().subscribe((payload: { approver_ids: number[]; comment?: string } | undefined) => {
+      if (!payload) return;
+      this.requestApproval(payload);
+    });
+  }
+
+  private requestSignoffForItem(item: BomItem, payload: { assignee_id: number; comment?: string }): void {
     const b = this.bom();
     if (!b || !this.canRequestWorkflow()) return;
-    const { approver_ids, comment } = this.approvalForm.getRawValue();
-    if (!approver_ids?.length) return;
+    this.savingSignoff = true;
+    this.bomService
+      .requestSignoff(b.id, {
+        assignee_id: payload.assignee_id,
+        item_ids: [item.id],
+        comment: payload.comment || ''
+      })
+      .subscribe({
+        next: () => {
+          this.savingSignoff = false;
+          this.notify.success('Signoff requested');
+          this.reload();
+        },
+        error: (err) => {
+          this.savingSignoff = false;
+          this.notify.error(err?.error?.detail || 'Failed to request signoff');
+        }
+      });
+  }
+
+  private requestApproval(payload: { approver_ids: number[]; comment?: string }): void {
+    const b = this.bom();
+    if (!b || !this.canRequestWorkflow()) return;
+    if (!payload.approver_ids?.length) return;
     this.savingApproval = true;
-    this.bomService.requestProcurementApproval(b.id, { approver_ids, comment: comment || '' }).subscribe({
+    this.bomService.requestProcurementApproval(b.id, { approver_ids: payload.approver_ids, comment: payload.comment || '' }).subscribe({
       next: () => {
         this.savingApproval = false;
         this.notify.success('Approval requested');
@@ -331,55 +394,29 @@ export class BomDetailComponent {
     });
   }
 
-  openCatalogPicker(): void {
-    this.showAddItem = true;
-    this.catalog.list({ page_size: 200 }).subscribe({
-      next: (resp) => {
-        const ref = this.dialog.open(CatalogPickerDialogComponent, {
-          panelClass: ['pt-dialog-panel'],
-          width: '520px',
-          maxWidth: '90vw',
-          data: { items: resp.results || [] }
-        });
-        ref.afterClosed().subscribe((item: CatalogItem | undefined) => {
-          if (item) this.applyCatalog(item);
-        });
+  deleteBom(): void {
+    const b = this.bom();
+    if (!b || !this.canDeleteBom()) return;
+    if (!confirm(`Delete BOM #${b.id}? This cannot be undone.`)) return;
+    this.deletingBom = true;
+    this.bomService.deleteBom(b.id).subscribe({
+      next: () => {
+        this.deletingBom = false;
+        this.notify.success('BOM deleted');
+        this.router.navigateByUrl('/boms');
       },
-      error: () => this.notify.error('Unable to load catalog items')
+      error: (err) => {
+        this.deletingBom = false;
+        this.notify.error(err?.error?.detail || 'Failed to delete BOM');
+      }
     });
   }
 
-  applyCatalog(item: CatalogItem): void {
-    this.selectedCatalog.set(item);
-    this.catalogData = item.data || null;
-    const patch: Record<string, any> = {
-      name: item.name || '',
-      description: item.description || '',
-      vendor: item.vendor_name || '',
-      category: item.category || '',
-      currency: item.currency || '',
-      unit_price: item.unit_price || '',
-      tax_percent: item.tax_percent || ''
-    };
-    if (!this.itemForm.controls.link.value && item.vendor_url) {
-      patch['link'] = item.vendor_url;
-    }
-    this.itemForm.patchValue(patch);
-  }
-
-  clearCatalogSelection(): void {
-    this.selectedCatalog.set(null);
-    this.catalogData = null;
-  }
-
-  addCollaborator(): void {
+  addCollaborator(userId: number): void {
     const b = this.bom();
     if (!b || !this.canManageCollaborators()) return;
-    const userId = Number(this.collabForm.controls.user_id.value);
-    if (!userId) return;
     this.bomService.addCollaborator(b.id, { user_id: userId }).subscribe({
       next: () => {
-        this.collabForm.reset({ user_id: null });
         this.notify.success('Collaborator added');
         this.loadCollaborators(b.id);
       },
@@ -416,6 +453,82 @@ export class BomDetailComponent {
     const taken = new Set(this.collaborators().map((c) => c.id));
     const ownerId = this.bom()?.owner;
     return this.users.filter((u) => !taken.has(u.id) && u.id !== ownerId);
+  }
+
+  fieldType(field: BomTemplateSchemaField): string {
+    return (field.type || '').toLowerCase();
+  }
+
+  private resolveItemFields(fields: BomTemplateSchemaField[]): BomTemplateSchemaField[] {
+    const next = [...fields];
+    const hasKey = (key: string) => next.some((f) => f.key === key);
+    if (!hasKey('name')) {
+      next.unshift({ key: 'name', label: 'Name', type: 'text' });
+    }
+    if (!hasKey('quantity')) {
+      next.push({ key: 'quantity', label: 'Quantity', type: 'number' });
+    }
+    return next;
+  }
+
+  schemaControl(field: BomTemplateSchemaField): FormControl<string | boolean | null> {
+    const existing = this.itemSchemaForm.get(field.key) as FormControl<string | boolean | null> | null;
+    if (existing) return existing;
+    const fallback = this.fb.control('');
+    this.itemSchemaForm.addControl(field.key, fallback);
+    return fallback;
+  }
+
+  private mapSchemaToItem(values: Record<string, any>): Partial<BomItem> & { name: string } {
+    const name = values['name'] || values['item_name'] || values['title'] || '';
+    const quantity = values['quantity'] || values['qty'] || '1';
+    const unitPrice = values['unit_price'] ?? values['price'] ?? '';
+    const taxPercent = values['tax_percent'] ?? values['tax'] ?? '';
+    return {
+      name: name,
+      description: values['description'] || values['details'] || '',
+      quantity: quantity || '1',
+      unit: values['unit'] || values['uom'] || '',
+      vendor: values['vendor'] || values['vendor_name'] || '',
+      category: values['category'] || '',
+      unit_price: unitPrice === '' ? null : String(unitPrice),
+      currency: values['currency'] || '',
+      tax_percent: taxPercent === '' ? null : String(taxPercent),
+      link: values['link'] || values['url'] || '',
+      notes: values['notes'] || ''
+    };
+  }
+
+  private extractSchemaExtras(values: Record<string, any>): Record<string, any> | null {
+    const baseKeys = new Set([
+      'name',
+      'item_name',
+      'title',
+      'description',
+      'details',
+      'quantity',
+      'qty',
+      'unit',
+      'uom',
+      'vendor',
+      'vendor_name',
+      'category',
+      'unit_price',
+      'price',
+      'currency',
+      'tax_percent',
+      'tax',
+      'link',
+      'url',
+      'notes'
+    ]);
+    const extra: Record<string, any> = {};
+    Object.entries(values || {}).forEach(([key, value]) => {
+      if (baseKeys.has(key)) return;
+      if (value === '' || value === null || typeof value === 'undefined') return;
+      extra[key] = value;
+    });
+    return Object.keys(extra).length ? extra : null;
   }
 
   download(format: 'pdf' | 'csv' | 'json'): void {

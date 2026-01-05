@@ -49,7 +49,7 @@ export class BomNewComponent {
   });
 
   ngOnInit(): void {
-    this.bomService.listTemplates().subscribe({
+    this.bomService.listTemplates({ page_size: 200 }).subscribe({
       next: (t) => {
         this.templates = this.normalizeTemplates(t);
         this.syncSelectedTemplate();
@@ -70,10 +70,37 @@ export class BomNewComponent {
     this.draftCapError = null;
     const { template, title, project } = this.form.getRawValue();
     this.bomService.createBom({ template, title: title!, project: project || '' }).subscribe({
-      next: (bom) => {
+      next: (resp) => {
         this.loading = false;
+        const bom = resp.body;
+        const location = resp.headers?.get('location') || resp.headers?.get('Location');
+        const idFromHeader = location ? Number(location.split('/').filter(Boolean).pop()) : NaN;
+        const bomId = bom?.id || (Number.isFinite(idFromHeader) ? idFromHeader : null);
+        if (!bomId) {
+          const lookupParams = {
+            page_size: 5,
+            q: title?.trim() || undefined,
+            template_id: template ?? undefined,
+            project: project?.trim() || undefined
+          };
+          this.bomService.listBoms(lookupParams).subscribe({
+            next: (list) => {
+              const match = (list.results || []).find((b) => b.title === title) || list.results?.[0];
+              if (match?.id) {
+                this.notify.success('Draft created');
+                this.router.navigateByUrl(`/boms/${match.id}`);
+                return;
+              }
+              this.notify.error('Draft created but could not open details');
+            },
+            error: () => {
+              this.notify.error('Draft created but could not open details');
+            }
+          });
+          return;
+        }
         this.notify.success('Draft created');
-        this.router.navigateByUrl(`/boms/${bom.id}`);
+        this.router.navigateByUrl(`/boms/${bomId}`);
       },
       error: (err) => {
         this.loading = false;

@@ -36,7 +36,8 @@ This document is the canonical reference for frontend-backend integration during
 - `/boms` BOM list
 - `/boms/new` Create BOM draft (may hit draft limit)
 - `/boms/:id` BOM detail (edit when `DRAFT`/`NEEDS_CHANGES`)
-- BOM detail includes collaborators (add/remove) and export downloads (PDF/CSV/JSON).
+- BOM detail includes collaborators (add/remove) via dialog, export downloads (PDF/CSV/JSON), and a delete action for owner/admin.
+- BOM detail supports deletion by the owner or an admin (with confirmation).
 - Collaborators are loaded via `/api/boms/:id/collaborators/` and managed via add/remove endpoints.
 - `/boms/:id/events` BOM audit events (server-filtered via `/api/bom-events/?bom_id=...`)
 - `/audit` Audit log with filters + pagination for BOM events
@@ -73,7 +74,10 @@ This document is the canonical reference for frontend-backend integration during
 - Template creation/edit uses a structured field builder UI (BOM fields + item fields) instead of raw JSON.
 - Field keys are auto-generated from labels (slugified and de-duplicated).
 - BOM list supports filter + pagination (status, search/q, project, owner_id, template_id, created/updated date ranges, page + page_size) plus a client-side “Shared with me” toggle.
-- BOM item add supports selecting a catalog item to prefill fields and store catalog `data` into the item payload.
+- BOM item add renders template-specific item fields (auto-generated controls from the BOM template schema) and maps known fields into the payload.
+- Catalog prefill UI in BOM detail is currently hidden; template fields are the only inputs shown for item creation.
+- Signoff requests are initiated from each item row (icon button + dialog).
+- Procurement approval requests are launched from a dialog in the workflow section.
 - Notifications dialog supports filters (read/unread, level, created date range) with pagination.
 - Profile includes `notifications_email_enabled` toggle for email mirroring.
 - Procurement core UI pages for catalog items, purchase orders, attachments, and search history are implemented.
