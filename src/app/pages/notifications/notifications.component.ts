@@ -1,5 +1,6 @@
 import { DatePipe, NgFor, NgIf } from '@angular/common';
-import { Component, inject } from '@angular/core';
+import { Component, effect, inject } from '@angular/core';
+import { Router } from '@angular/router';
 import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatChipsModule } from '@angular/material/chips';
@@ -37,6 +38,7 @@ export class NotificationsComponent {
   private readonly notificationsService = inject(NotificationsService);
   private readonly notify = inject(NotificationPanelService);
   private readonly fb = inject(FormBuilder);
+  private readonly router = inject(Router);
 
   loading = false;
   notifications: ApiNotification[] = [];
@@ -58,6 +60,13 @@ export class NotificationsComponent {
 
   ngOnInit(): void {
     this.reload();
+    effect(() => {
+      const tick = this.notificationsService.incomingTick();
+      if (tick > 0) {
+        this.page = 1;
+        this.reload();
+      }
+    });
   }
 
   reload(): void {
@@ -82,9 +91,9 @@ export class NotificationsComponent {
         this.loading = false;
         this.notificationsService.refreshUnread().subscribe({ error: () => undefined });
       },
-      error: () => {
+      error: (err) => {
         this.loading = false;
-        this.notify.error('Failed to load notifications');
+        this.notify.errorFrom(err, 'Failed to load notifications');
       }
     });
   }
@@ -98,7 +107,7 @@ export class NotificationsComponent {
         this.notificationsService.refreshUnread().subscribe({ error: () => undefined });
         this.notify.success('Marked as read');
       },
-      error: () => this.notify.error('Failed to mark read')
+      error: (err) => this.notify.errorFrom(err, 'Failed to mark read')
     });
   }
 
@@ -110,7 +119,7 @@ export class NotificationsComponent {
         this.notificationsService.refreshUnread().subscribe({ error: () => undefined });
         this.notify.success('All notifications marked read');
       },
-      error: () => this.notify.error('Failed to mark all read')
+      error: (err) => this.notify.errorFrom(err, 'Failed to mark all read')
     });
   }
 
@@ -150,6 +159,48 @@ export class NotificationsComponent {
 
   close(): void {
     this.dialogRef.close();
+  }
+
+  openNotification(n: ApiNotification): void {
+    const route = this.notificationRoute(n);
+    if (route) {
+      this.dialogRef.close();
+      this.router.navigateByUrl(route);
+      return;
+    }
+    if (n.link) {
+      window.open(n.link, '_blank', 'noopener');
+    }
+  }
+
+  notificationRoute(n: ApiNotification): string | null {
+    if (this.isApprovalRequest(n)) return '/inbox/approvals';
+    const link = (n.link || '').trim();
+    if (!link) return null;
+    if (link.startsWith('/')) return link;
+    if (typeof window !== 'undefined') {
+      try {
+        const url = new URL(link, window.location.origin);
+        if (url.origin === window.location.origin) {
+          return `${url.pathname}${url.search}${url.hash}`;
+        }
+      } catch {
+        return null;
+      }
+    }
+    return null;
+  }
+
+  private isApprovalRequest(n: ApiNotification): boolean {
+    const text = `${n.title || ''} ${n.body || ''}`.toLowerCase();
+    return (
+      text.includes('approval request') ||
+      text.includes('approval requested') ||
+      text.includes('request approval') ||
+      text.includes('approver') ||
+      text.includes('approval needed') ||
+      text.includes('procurement approval')
+    );
   }
 }
 

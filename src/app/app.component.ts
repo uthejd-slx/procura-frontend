@@ -1,5 +1,5 @@
 import { AsyncPipe, NgIf } from '@angular/common';
-import { Component, computed, inject, signal } from '@angular/core';
+import { Component, computed, effect, inject, signal } from '@angular/core';
 import { NavigationEnd, Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
@@ -21,6 +21,7 @@ import { NotificationsDialogService } from './core/notifications-dialog.service'
 import { LoadingService } from './core/loading.service';
 import { NotificationPanelComponent } from './components/notification-panel/notification-panel.component';
 import { NotificationPanelService } from './core/notification-panel.service';
+import { NotificationPollingService } from './core/notification-polling.service';
 import { FeedbackDialogService } from './core/feedback-dialog.service';
 import { TutorialService } from './core/tutorial.service';
 import { TutorialOverlayComponent } from './components/tutorial-overlay/tutorial-overlay.component';
@@ -55,6 +56,7 @@ export class AppComponent {
   private readonly auth = inject(AuthService);
   private readonly notifications = inject(NotificationsService);
   private readonly notificationPanel = inject(NotificationPanelService);
+  private readonly notificationPolling = inject(NotificationPollingService);
   private readonly router = inject(Router);
   private readonly notificationsDialog = inject(NotificationsDialogService);
   private readonly feedbackDialog = inject(FeedbackDialogService);
@@ -63,6 +65,9 @@ export class AppComponent {
   private readonly sanitizer = inject(DomSanitizer);
   private readonly avatarService = inject(AvatarService);
   private readonly tutorial = inject(TutorialService);
+  private lastUnreadCount: number | null = null;
+  private baseTitle = 'Procura';
+  private audioContext?: AudioContext;
 
   readonly user$ = this.auth.user$;
   readonly isAuthenticated = computed(() => this.auth.isAuthenticated());
@@ -84,6 +89,9 @@ export class AppComponent {
   });
 
   ngOnInit(): void {
+    if (typeof document !== 'undefined') {
+      this.baseTitle = document.title || this.baseTitle;
+    }
     this.registerIcons();
     if (this.auth.isAuthenticated()) {
       this.auth.loadMe().subscribe();
@@ -93,6 +101,25 @@ export class AppComponent {
     this.updateLayoutForUrl(this.router.url);
     this.router.events.pipe(filter((evt) => evt instanceof NavigationEnd)).subscribe((evt) => {
       this.updateLayoutForUrl((evt as NavigationEnd).urlAfterRedirects);
+    });
+
+    effect(() => {
+      const isAuthed = this.auth.isAuthenticated() || !!this.user$();
+      const count = this.unreadCount();
+      if (!isAuthed) {
+        this.updateTitleWithUnread(0);
+        this.lastUnreadCount = null;
+        return;
+      }
+      this.updateTitleWithUnread(count);
+      if (this.lastUnreadCount === null) {
+        this.lastUnreadCount = count;
+        return;
+      }
+      if (count > this.lastUnreadCount) {
+        this.playNotificationSound();
+      }
+      this.lastUnreadCount = count;
     });
 
   }
@@ -153,10 +180,13 @@ export class AppComponent {
     );
   }
 
+
   logout(): void {
     this.auth.logout();
     this.notifications.clearUnread();
     this.feedbackDialog.close();
+    this.notificationPolling.stop();
+    this.updateTitleWithUnread(0);
     this.notificationPanel.success('Logged out');
   }
 
@@ -183,5 +213,38 @@ export class AppComponent {
         .map((part) => part[0]?.toUpperCase() || '')
         .join('') || 'P'
     );
+  }
+
+  private updateTitleWithUnread(count: number): void {
+    if (typeof document === 'undefined') return;
+    const baseTitle = this.baseTitle || document.title || 'Procura';
+    document.title = count > 0 ? `(${count}) ${baseTitle}` : baseTitle;
+  }
+
+
+  private playNotificationSound(): void {
+    if (typeof window === 'undefined') return;
+    const AudioCtor = (window as typeof window & { webkitAudioContext?: typeof AudioContext }).AudioContext
+      || (window as typeof window & { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
+    if (!AudioCtor) return;
+    try {
+      if (!this.audioContext) {
+        this.audioContext = new AudioCtor();
+      }
+      if (this.audioContext.state === 'suspended') {
+        this.audioContext.resume().catch(() => undefined);
+      }
+      const oscillator = this.audioContext.createOscillator();
+      const gainNode = this.audioContext.createGain();
+      oscillator.type = 'sine';
+      oscillator.frequency.value = 880;
+      gainNode.gain.value = 0.05;
+      oscillator.connect(gainNode);
+      gainNode.connect(this.audioContext.destination);
+      oscillator.start();
+      oscillator.stop(this.audioContext.currentTime + 0.2);
+    } catch {
+      // Audio may be blocked without user interaction.
+    }
   }
 }

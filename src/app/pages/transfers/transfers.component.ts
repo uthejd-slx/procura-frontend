@@ -81,9 +81,9 @@ export class TransfersComponent {
         this.transfers.set(resp.results || []);
         this.loading.set(false);
       },
-      error: () => {
+      error: (err) => {
         this.loading.set(false);
-        this.notify.error('Failed to load transfers');
+        this.notify.errorFrom(err, 'Failed to load transfers');
       }
     });
   }
@@ -109,7 +109,7 @@ export class TransfersComponent {
         this.createForm.reset({ partner: '', notes: '' });
         this.reload();
       },
-      error: () => this.notify.error('Unable to create transfer')
+      error: (err) => this.notify.errorFrom(err, 'Unable to create transfer')
     });
   }
 

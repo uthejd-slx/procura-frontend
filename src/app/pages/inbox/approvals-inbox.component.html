@@ -19,10 +19,13 @@
 
         <table mat-table [dataSource]="approvals" class="pt-table" *ngIf="!loading && approvals.length">
           <ng-container matColumnDef="approval">
-            <th mat-header-cell *matHeaderCellDef>Approval</th>
+            <th mat-header-cell *matHeaderCellDef>BOM</th>
             <td mat-cell *matCellDef="let a">
-              <div class="pt-title">Approval #{{ a.id }}</div>
-              <div class="pt-muted">Request #{{ a.request }}</div>
+              <div class="pt-title" *ngIf="approvalBomId(a) as bomId">
+                <a class="pt-link" [routerLink]="['/boms', bomId]">BOM #{{ bomId }}</a>
+              </div>
+              <div class="pt-muted" *ngIf="!approvalBomId(a)">BOM unavailable</div>
+              <div class="pt-muted">Approval #{{ a.id }}</div>
             </td>
           </ng-container>
 

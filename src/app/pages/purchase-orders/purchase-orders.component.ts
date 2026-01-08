@@ -112,9 +112,9 @@ export class PurchaseOrdersComponent {
           this.hasPrev.set(!!resp.previous);
           this.loading.set(false);
         },
-        error: () => {
+        error: (err) => {
           this.loading.set(false);
-          this.notify.error('Failed to load purchase orders');
+          this.notify.errorFrom(err, 'Failed to load purchase orders');
         }
       });
   }
@@ -156,7 +156,7 @@ export class PurchaseOrdersComponent {
         this.createForm.reset({ bom: '', po_number: '', vendor_name: '', currency: '', notes: '' });
         this.reload();
       },
-      error: () => this.notify.error('Unable to create purchase order')
+      error: (err) => this.notify.errorFrom(err, 'Unable to create purchase order')
     });
   }
 

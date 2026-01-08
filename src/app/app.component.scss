@@ -1,11 +1,12 @@
 .app-main {
-  padding: 24px 18px;
-  max-width: 1320px;
+  padding: 96px 18px 24px;
+  max-width: none;
+  width: 100%;
   margin: 0 auto;
   height: 100vh;
   box-sizing: border-box;
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: center;
 }
 
@@ -116,8 +117,8 @@
 }
 
 .app-surface {
-  width: min(1320px, 100%);
-  height: min(780px, calc(100vh - 48px));
+  width: 100%;
+  height: calc(100vh - 132px);
   background: #1f1f1f;
   border-radius: 26px;
   border: 1px solid rgba(31, 31, 31, 0.1);
@@ -162,41 +163,49 @@
 
 .pt-feedback-fab {
   position: fixed;
-  left: 22px;
+  right: 22px;
   bottom: 24px;
   z-index: 12;
   box-shadow: 0 14px 28px rgba(0, 0, 0, 0.28);
-  border-radius: 999px;
-  padding: 0 18px 0 20px;
-  height: 44px;
+  border-radius: 50%;
+  width: 52px;
+  height: 52px;
+  min-width: 52px;
+  min-height: 52px;
+  max-width: 52px;
+  max-height: 52px;
+  padding: 0;
   display: inline-flex;
   align-items: center;
-  gap: 8px;
+  justify-content: center;
+  gap: 0;
   font-weight: 600;
   letter-spacing: 0.2px;
-  background-color: #1f1f1f !important;
-  color: rgba(201, 218, 122, 0.95) !important;
-  border: 1px solid rgba(201, 218, 122, 0.3);
+  background-color: var(--pt-accent) !important;
+  color: var(--pt-on-accent) !important;
+  border: 1px solid rgba(21, 21, 21, 0.2);
+  --mdc-filled-button-container-shape: 50%;
 }
 
 .pt-feedback-fab mat-icon {
-  margin-left: 2px;
+  margin: 0;
+}
+.pt-feedback-fab span {
+  display: none;
 }
 
 .pt-feedback-fab:hover {
-  border-color: rgba(201, 218, 122, 0.3);
-  background-color: #1f1f1f !important;
+  border-color: rgba(21, 21, 21, 0.3);
+  background-color: var(--pt-accent) !important;
 }
 
 @media (max-width: 1920px) and (max-height: 1200px) {
   .app-main {
-    max-width: 1200px;
-    padding: 18px 16px;
+    padding: 84px 16px 20px;
   }
 
   .app-surface {
-    width: min(1200px, 100%);
-    height: min(720px, calc(100vh - 40px));
+    height: calc(100vh - 116px);
   }
 
   .app-content {
@@ -224,7 +233,7 @@
 
 @media (max-width: 900px) {
   .pt-feedback-fab {
-    left: 16px;
+    right: 16px;
     bottom: 18px;
     height: 40px;
   }

@@ -107,9 +107,9 @@ export class BillsComponent {
           this.hasPrev.set(!!resp.previous);
           this.loading.set(false);
         },
-        error: () => {
+        error: (err) => {
           this.loading.set(false);
-          this.notify.error('Failed to load bills');
+          this.notify.errorFrom(err, 'Failed to load bills');
         }
       });
   }
@@ -143,7 +143,7 @@ export class BillsComponent {
         this.createForm.reset({ title: '', vendor_name: '', amount: '', currency: '', due_date: '', bom: '', purchase_order: '', notes: '' });
         this.reload();
       },
-      error: () => this.notify.error('Unable to create bill')
+      error: (err) => this.notify.errorFrom(err, 'Unable to create bill')
     });
   }
 

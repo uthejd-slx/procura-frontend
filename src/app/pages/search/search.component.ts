@@ -60,9 +60,9 @@ export class SearchComponent {
         this.history.set(resp.results || []);
         this.loadingHistory.set(false);
       },
-      error: () => {
+      error: (err) => {
         this.loadingHistory.set(false);
-        this.notify.error('Failed to load search history');
+        this.notify.errorFrom(err, 'Failed to load search history');
       }
     });
   }
@@ -88,7 +88,7 @@ export class SearchComponent {
         this.logForm.reset({ entity_type: 'BOM', query: '', filters: '' });
         this.loadHistory();
       },
-      error: () => this.notify.error('Unable to log search')
+      error: (err) => this.notify.errorFrom(err, 'Unable to log search')
     });
   }
 

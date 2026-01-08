@@ -79,9 +79,9 @@ export class SignoffInboxComponent {
         }
         this.loading = false;
       },
-      error: () => {
+      error: (err) => {
         this.loading = false;
-        this.notify.error('Failed to load signoff inbox');
+        this.notify.errorFrom(err, 'Failed to load signoff inbox');
       }
     });
   }
@@ -99,7 +99,7 @@ export class SignoffInboxComponent {
       },
       error: (err) => {
         this.savingId = null;
-        this.notify.error(err?.error?.detail || 'Failed to submit decision');
+        this.notify.errorFrom(err, 'Failed to submit decision');
       }
     });
   }

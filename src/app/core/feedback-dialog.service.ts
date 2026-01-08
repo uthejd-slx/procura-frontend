@@ -19,15 +19,15 @@ export class FeedbackDialogService {
     }
     this.ref = this.dialog.open(FeedbackDialogComponent, {
       panelClass: ['pt-dialog-panel', 'pt-feedback-panel'],
-      width: '340px',
-      height: '62vh',
+      width: '520px',
+      height: '78vh',
       maxWidth: '94vw',
       maxHeight: '86vh',
       hasBackdrop: true,
       backdropClass: 'pt-feedback-backdrop',
       position: {
         bottom: '76px',
-        left: '20px'
+        right: '20px'
       },
       autoFocus: false,
       restoreFocus: false,

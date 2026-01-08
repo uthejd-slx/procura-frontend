@@ -93,9 +93,9 @@ export class PurchaseOrderDetailComponent {
         });
         this.loading.set(false);
       },
-      error: () => {
+      error: (err) => {
         this.loading.set(false);
-        this.notify.error('Failed to load purchase order');
+        this.notify.errorFrom(err, 'Failed to load purchase order');
       }
     });
   }
@@ -117,7 +117,7 @@ export class PurchaseOrderDetailComponent {
         this.order.set(updated);
         this.notify.success('Purchase order updated');
       },
-      error: () => this.notify.error('Unable to update purchase order')
+      error: (err) => this.notify.errorFrom(err, 'Unable to update purchase order')
     });
   }
 
@@ -161,7 +161,7 @@ export class PurchaseOrderDetailComponent {
         });
         this.load(po.id);
       },
-      error: () => this.notify.error('Unable to add line item')
+      error: (err) => this.notify.errorFrom(err, 'Unable to add line item')
     });
   }
 
@@ -174,7 +174,7 @@ export class PurchaseOrderDetailComponent {
         this.order.set(updated);
         this.notify.success('PO marked as sent');
       },
-      error: () => this.notify.error('Unable to mark sent')
+      error: (err) => this.notify.errorFrom(err, 'Unable to mark sent')
     });
   }
 
@@ -187,7 +187,7 @@ export class PurchaseOrderDetailComponent {
         this.order.set(updated);
         this.notify.success('PO canceled');
       },
-      error: () => this.notify.error('Unable to cancel PO')
+      error: (err) => this.notify.errorFrom(err, 'Unable to cancel PO')
     });
   }
 
@@ -214,7 +214,7 @@ export class PurchaseOrderDetailComponent {
         for (const line of lines) delete this.receiveMap[line.item_id];
         this.load(po.id);
       },
-      error: () => this.notify.error('Unable to record receipt')
+      error: (err) => this.notify.errorFrom(err, 'Unable to record receipt')
     });
   }
 

@@ -47,9 +47,9 @@ export class ResetRequestComponent {
         this.notify.success(msg);
         if (resetLink) window.open(resetLink, '_blank');
       },
-      error: () => {
+      error: (err) => {
         this.loading = false;
-        this.notify.error('Request failed');
+        this.notify.errorFrom(err, 'Request failed');
       }
     });
   }

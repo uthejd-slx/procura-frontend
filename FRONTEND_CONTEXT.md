@@ -43,7 +43,7 @@ This document is the canonical reference for frontend-backend integration during
 - `/audit` Audit log with filters + pagination for BOM events
 - `/bom-templates` Templates (global + mine)
 - `/inbox/signoff` Items assigned to me (signoff)
-- `/inbox/approvals` Procurement approvals assigned to me (role-gated: `approver` or `admin`)
+- `/inbox/approvals` Procurement approvals assigned to me (role-gated: `approver` or `admin`); approvals list shows BOM links.
 - `/procurement` Procurement actions (role-gated: `procurement` or `admin` for access; actions require `procurement`)
 - `/admin/users` Admin user management (role-gated: `admin`)
 - `/catalog` Catalog items (create/edit personal items; filters for vendor/category/search)
@@ -78,7 +78,9 @@ This document is the canonical reference for frontend-backend integration during
 - Catalog prefill UI in BOM detail is currently hidden; template fields are the only inputs shown for item creation.
 - Signoff requests are initiated from each item row (icon button + dialog).
 - Procurement approval requests are launched from a dialog in the workflow section.
-- Notifications dialog supports filters (read/unread, level, created date range) with pagination.
+- BOM items table now renders the template item fields dynamically, with signoff/received/action columns.
+- Notifications dialog supports filters (read/unread, level, created date range) with pagination; approval request notifications route to the Approvals inbox.
+- Unread notifications update instantly via SSE (`/api/notifications/stream/`), update the browser tab title with the unread count, and play a brief sound cue when new notifications arrive.
 - Profile includes `notifications_email_enabled` toggle for email mirroring.
 - Procurement core UI pages for catalog items, purchase orders, attachments, and search history are implemented.
 - Operations UI pages for assets, partner transfers, and bills (no approval workflow) are implemented.
@@ -113,5 +115,6 @@ The frontend does not auto-open these links; users are prompted to check email f
 - Global card surface tokens (`--pt-card-radius`, `--pt-card-bg`, `--pt-card-border`) drive consistent rounding and borders across cards, tables, dialogs, and list blocks.
 - Material overlays (menus/selects/autocomplete), tooltips, slide toggles, and scrollbars are styled to match the dark-lime theme.
 - Snackbars were replaced by a custom pop-up notification panel (bottom-right stack with close icons) to match the UI theme.
+- Notification pop-ups now surface backend error details via a shared error parser (`errorFrom`) and map invalid-token messages to a friendly session-expired prompt.
 - File upload inputs use themed styling for the Choose file button and field.
 - Help guide markdown content uses theme styling with responsive images and tables.

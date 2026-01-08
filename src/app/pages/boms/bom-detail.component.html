@@ -27,10 +27,11 @@
               <input matInput formControlName="project" [readonly]="!editable()" />
             </mat-form-field>
             <button
+              *ngIf="editable()"
               mat-icon-button
               color="primary"
               type="submit"
-              [disabled]="!editable() || savingMeta"
+              [disabled]="savingMeta"
               matTooltip="Save"
             >
               <mat-icon>save</mat-icon>
@@ -44,18 +45,18 @@
           </div>
         </form>
 
-        <div class="pt-section">
+        <div class="pt-section" *ngIf="showCollaboratorsSection()">
           <div class="pt-row" style="align-items:center; gap: 10px; flex-wrap: wrap">
             <div class="pt-h">Collaborators</div>
             <span class="pt-muted">Collaborators can edit and request approvals.</span>
             <span style="flex: 1 1 auto"></span>
             <button
+              *ngIf="showCollaboratorActions()"
               mat-icon-button
               color="primary"
               type="button"
               matTooltip="Add collaborator"
               (click)="openCollaboratorDialog()"
-              [disabled]="!canManageCollaborators()"
             >
               <mat-icon>person_add</mat-icon>
             </button>
@@ -138,25 +139,31 @@
 
             <div class="pt-row" style="gap: 10px; align-items:center; grid-column: span 2; flex-wrap: wrap">
               <button mat-raised-button color="primary" type="submit" [disabled]="itemSchemaForm.invalid || savingItem">
-                <mat-icon>add</mat-icon>
-                Add
+                <mat-icon>{{ editingItemId ? 'save' : 'add' }}</mat-icon>
+                {{ editingItemId ? 'Save changes' : 'Add' }}
               </button>
-              <button mat-button type="button" (click)="showAddItem = false">Cancel</button>
+              <button mat-button type="button" (click)="showAddItem = false; editingItemId = null">Cancel</button>
             </div>
           </form>
 
+          <div class="pt-table-wrap">
           <table mat-table [dataSource]="bom()!.items" class="pt-table" style="margin-top: 14px">
             <ng-container matColumnDef="name">
               <th mat-header-cell *matHeaderCellDef>Name</th>
               <td mat-cell *matCellDef="let i">
                 <div class="pt-title">{{ i.name }}</div>
-                <div class="pt-muted" *ngIf="i.vendor">{{ i.vendor }}</div>
-                <div class="pt-muted" *ngIf="i.category">{{ i.category }}</div>
               </td>
             </ng-container>
-            <ng-container matColumnDef="qty">
-              <th mat-header-cell *matHeaderCellDef>Qty</th>
-              <td mat-cell *matCellDef="let i">{{ i.quantity }} {{ i.unit }}</td>
+            <ng-container *ngFor="let field of displayItemFields()" [matColumnDef]="field.key">
+              <th mat-header-cell *matHeaderCellDef>{{ field.label || field.key }}</th>
+              <td mat-cell *matCellDef="let i">
+                <ng-container *ngIf="isLinkField(field) && itemFieldValue(i, field) !== '—'; else fieldText">
+                  <a class="pt-link" [href]="itemFieldValue(i, field)" target="_blank" rel="noopener">Open</a>
+                </ng-container>
+                <ng-template #fieldText>
+                  <span>{{ itemFieldValue(i, field) }}</span>
+                </ng-template>
+              </td>
             </ng-container>
             <ng-container matColumnDef="signoff">
               <th mat-header-cell *matHeaderCellDef>Signoff</th>
@@ -176,13 +183,35 @@
                 </div>
               </td>
             </ng-container>
-            <ng-container matColumnDef="received">
-              <th mat-header-cell *matHeaderCellDef>Received</th>
-              <td mat-cell *matCellDef="let i">{{ i.received_quantity }}</td>
+            <ng-container matColumnDef="actions">
+              <th mat-header-cell *matHeaderCellDef></th>
+              <td mat-cell *matCellDef="let i">
+                <div class="pt-row pt-item-actions" *ngIf="editable()">
+                  <button
+                    mat-icon-button
+                    type="button"
+                    color="primary"
+                    matTooltip="Edit item"
+                    (click)="editItem(i)"
+                  >
+                    <mat-icon>edit</mat-icon>
+                  </button>
+                  <button
+                    mat-icon-button
+                    type="button"
+                    color="primary"
+                    matTooltip="Delete item"
+                    (click)="deleteItem(i)"
+                  >
+                    <mat-icon>delete</mat-icon>
+                  </button>
+                </div>
+              </td>
             </ng-container>
-            <tr mat-header-row *matHeaderRowDef="itemColumns"></tr>
-            <tr mat-row *matRowDef="let row; columns: itemColumns"></tr>
+            <tr mat-header-row *matHeaderRowDef="itemColumns()"></tr>
+            <tr mat-row *matRowDef="let row; columns: itemColumns()"></tr>
           </table>
+          </div>
         </div>
 
         <div class="pt-section" data-tutorial="bom-workflow">
@@ -201,13 +230,13 @@
             </button>
           </div>
 
-          <div class="pt-grid" style="margin-top: 18px">
+          <div class="pt-grid" style="margin-top: 18px" *ngIf="canCancelFlow()">
             <mat-form-field appearance="outline" style="grid-column: span 2">
               <mat-label>Cancel comment (optional)</mat-label>
-              <textarea matInput [formControl]="cancelForm.controls.comment" rows="2" [disabled]="!canCancelFlow()"></textarea>
+              <textarea matInput [formControl]="cancelForm.controls.comment" rows="2"></textarea>
             </mat-form-field>
             <div class="pt-row" style="gap: 10px; align-items:center; grid-column: span 2; flex-wrap: wrap">
-              <button mat-stroked-button color="primary" type="button" (click)="cancelFlow()" [disabled]="!canCancelFlow() || savingCancel">
+              <button mat-stroked-button color="primary" type="button" (click)="cancelFlow()" [disabled]="savingCancel">
                 Cancel workflow
               </button>
               <span class="pt-muted">Owner or procurement can cancel.</span>

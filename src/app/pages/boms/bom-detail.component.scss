@@ -57,6 +57,10 @@
       .pt-table {
         width: 100%;
       }
+      .pt-table-wrap {
+        margin-top: 14px;
+        overflow-x: auto;
+      }
       .pt-link {
         color: rgba(201, 218, 122, 0.95);
         text-decoration: none;
@@ -92,6 +96,11 @@
       .pt-signoff-cell {
         align-items: center;
         gap: 6px;
+      }
+      .pt-item-actions {
+        align-items: center;
+        gap: 6px;
+        justify-content: flex-end;
       }
       @media (max-width: 900px) {
         .pt-grid {

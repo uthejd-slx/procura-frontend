@@ -69,11 +69,6 @@ export class FeedbackDialogComponent {
   readonly hasNext = signal(false);
   readonly hasPrev = signal(false);
   readonly pageCount = computed(() => Math.max(1, Math.ceil(this.total() / this.pageSize())));
-  readonly isExpanded = signal(false);
-
-  private readonly baseSize = { width: '340px', height: '62vh' };
-  private readonly expandedSize = { width: '480px', height: '78vh' };
-
   private rowState = new Map<number, { status: FeedbackStatus; admin_note: string; saving: boolean }>();
 
   ngOnInit(): void {
@@ -101,7 +96,7 @@ export class FeedbackDialogComponent {
           this.page.set(1);
           this.loadList();
         },
-        error: (err) => this.notify.error(err?.error?.detail || 'Unable to send feedback')
+        error: (err) => this.notify.errorFrom(err, 'Unable to send feedback')
       });
   }
 
@@ -117,9 +112,9 @@ export class FeedbackDialogComponent {
           this.hasPrev.set(!!resp.previous);
           this.loadingList.set(false);
         },
-        error: () => {
+        error: (err) => {
           this.loadingList.set(false);
-          this.notify.error('Failed to load feedback');
+          this.notify.errorFrom(err, 'Failed to load feedback');
         }
       });
   }
@@ -172,16 +167,9 @@ export class FeedbackDialogComponent {
       },
       error: (err) => {
         state.saving = false;
-        this.notify.error(err?.error?.detail || 'Unable to update feedback');
+        this.notify.errorFrom(err, 'Unable to update feedback');
       }
     });
-  }
-
-  toggleExpand(): void {
-    const next = !this.isExpanded();
-    this.isExpanded.set(next);
-    const size = next ? this.expandedSize : this.baseSize;
-    this.dialogRef.updateSize(size.width, size.height);
   }
 
   closeAndReset(): void {

@@ -71,9 +71,15 @@
               </div>
               <div class="pt-body" *ngIf="n.body">{{ n.body }}</div>
               <div class="pt-row" style="margin-top: 10px; gap: 8px; flex-wrap: wrap">
-                <a *ngIf="n.link" mat-button color="primary" [href]="n.link" target="_blank" rel="noreferrer">
+                <button
+                  mat-button
+                  color="primary"
+                  type="button"
+                  (click)="openNotification(n)"
+                  *ngIf="notificationRoute(n) || n.link"
+                >
                   Open
-                </a>
+                </button>
                 <button mat-button color="primary" (click)="markRead(n)" [disabled]="n.is_read">
                   Mark read
                 </button>

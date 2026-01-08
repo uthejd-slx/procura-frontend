@@ -62,9 +62,9 @@ export class PartnersComponent {
         this.partners.set(resp.results || []);
         this.loading.set(false);
       },
-      error: () => {
+      error: (err) => {
         this.loading.set(false);
-        this.notify.error('Failed to load partners');
+        this.notify.errorFrom(err, 'Failed to load partners');
       }
     });
   }
@@ -104,7 +104,7 @@ export class PartnersComponent {
         this.cancelEdit();
         this.reload();
       },
-      error: () => this.notify.error('Unable to save partner')
+      error: (err) => this.notify.errorFrom(err, 'Unable to save partner')
     });
   }
 
@@ -117,7 +117,7 @@ export class PartnersComponent {
         this.notify.success('Partner deleted');
         this.reload();
       },
-      error: () => this.notify.error('Unable to delete partner')
+      error: (err) => this.notify.errorFrom(err, 'Unable to delete partner')
     });
   }
 }

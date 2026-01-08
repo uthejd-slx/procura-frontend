@@ -3,9 +3,6 @@
         <span class="pt-dialog-title">Send feedback</span>
         <span style="flex: 1 1 auto"></span>
         <div class="pt-dialog-actions">
-          <button mat-icon-button (click)="toggleExpand()" aria-label="Expand feedback">
-            <mat-icon>{{ isExpanded() ? 'close_fullscreen' : 'open_in_full' }}</mat-icon>
-          </button>
           <button mat-icon-button (click)="closeAndReset()" aria-label="Close feedback dialog">
             <mat-icon>close</mat-icon>
           </button>
@@ -101,6 +98,7 @@
           </div>
         </div>
 
+        <div class="pt-divider" *ngIf="!loadingList() && total()"></div>
         <div class="pt-pagination" *ngIf="!loadingList() && total()">
           <span class="pt-muted">Page {{ page() }} of {{ pageCount() }}</span>
           <span style="flex: 1 1 auto"></span>

@@ -48,9 +48,9 @@ export class BomEventsComponent {
         this.events.set(resp.results || []);
         this.loading.set(false);
       },
-      error: () => {
+      error: (err) => {
         this.loading.set(false);
-        this.notify.error('Failed to load events');
+        this.notify.errorFrom(err, 'Failed to load events');
       }
     });
   }

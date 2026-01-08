@@ -60,7 +60,7 @@ export class HomeComponent {
         this.loadRecentBoms();
       },
       error: (err) => {
-        this.notify.error(err?.error?.detail || 'Failed to delete BOM');
+        this.notify.errorFrom(err, 'Failed to delete BOM');
       }
     });
   }
@@ -72,9 +72,9 @@ export class HomeComponent {
         this.recentBoms = resp.results || [];
         this.loadingBoms = false;
       },
-      error: () => {
+      error: (err) => {
         this.loadingBoms = false;
-        this.notify.error('Failed to load recent BOMs');
+        this.notify.errorFrom(err, 'Failed to load recent BOMs');
       }
     });
   }

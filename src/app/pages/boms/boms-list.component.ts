@@ -132,9 +132,9 @@ export class BomsListComponent {
           this.hasPrev.set(!!resp.previous);
           this.loading.set(false);
         },
-        error: () => {
+        error: (err) => {
           this.loading.set(false);
-          this.notify.error('Failed to load BOMs');
+          this.notify.errorFrom(err, 'Failed to load BOMs');
         }
       });
   }
@@ -204,7 +204,7 @@ export class BomsListComponent {
         this.reload();
       },
       error: (err) => {
-        this.notify.error(err?.error?.detail || 'Failed to delete BOM');
+        this.notify.errorFrom(err, 'Failed to delete BOM');
       }
     });
   }

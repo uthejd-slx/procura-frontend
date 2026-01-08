@@ -85,9 +85,9 @@ export class AuditEventsComponent {
           this.hasPrev = !!resp.previous;
           this.loading = false;
         },
-        error: () => {
+        error: (err) => {
           this.loading = false;
-          this.notify.error('Failed to load audit events');
+          this.notify.errorFrom(err, 'Failed to load audit events');
         }
       });
   }

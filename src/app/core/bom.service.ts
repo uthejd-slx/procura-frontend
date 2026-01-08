@@ -60,6 +60,14 @@ export class BomService {
     return this.http.post<BomItem>(`${this.baseUrl}/boms/${bomId}/items/`, payload);
   }
 
+  updateItem(itemId: number, payload: Partial<BomItem> & { name?: string }) {
+    return this.http.patch<BomItem>(`${this.baseUrl}/bom-items/${itemId}/`, payload);
+  }
+
+  deleteItem(itemId: number) {
+    return this.http.delete(`${this.baseUrl}/bom-items/${itemId}/`);
+  }
+
   requestSignoff(bomId: number, payload: { assignee_id: number; item_ids?: number[]; comment?: string }) {
     return this.http.post(`${this.baseUrl}/boms/${bomId}/request-signoff/`, payload);
   }

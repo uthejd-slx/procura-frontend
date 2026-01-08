@@ -31,7 +31,11 @@ export class AuthService {
   loadMe() {
     return this.http.get<ApiUser>(`${this.baseUrl}/auth/me/`).pipe(
       tap((user) => this._user.set(user)),
-      catchError(() => {
+      catchError((err) => {
+        if (err?.status === 401) {
+          this.tokenStorage.clear();
+          this.router.navigateByUrl('/login');
+        }
         this._user.set(null);
         return of(null);
       })

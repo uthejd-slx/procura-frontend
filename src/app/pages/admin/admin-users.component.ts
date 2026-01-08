@@ -93,9 +93,9 @@ export class AdminUsersComponent {
         }
         this.loading = false;
       },
-      error: () => {
+      error: (err) => {
         this.loading = false;
-        this.notify.error('Failed to load users');
+        this.notify.errorFrom(err, 'Failed to load users');
       }
     });
   }
@@ -115,8 +115,7 @@ export class AdminUsersComponent {
       },
       error: (err) => {
         this.savingId = null;
-        const msg = err?.error?.detail || 'Update failed';
-        this.notify.error(msg);
+        this.notify.errorFrom(err, 'Update failed');
       }
     });
   }

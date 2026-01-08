@@ -7,9 +7,24 @@
       .pt-title {
         font-weight: 600;
       }
-      .pt-table {
-        width: 100%;
-      }
+.pt-table {
+  width: 100%;
+}
+:host ::ng-deep .pt-link,
+:host ::ng-deep .pt-link:visited,
+:host ::ng-deep .pt-link:hover,
+:host ::ng-deep .pt-link:active {
+  color: var(--pt-primary) !important;
+}
+.pt-table {
+  border-collapse: separate;
+  border-spacing: 0 10px;
+}
+.pt-table tr.mat-mdc-row td {
+  padding-top: 10px;
+  padding-bottom: 10px;
+  vertical-align: top;
+}
       :host ::ng-deep .mat-mdc-form-field-subscript-wrapper {
         display: none;
       }

@@ -8,6 +8,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 import { MatTableModule } from '@angular/material/table';
+import { RouterModule } from '@angular/router';
 
 import { AuthService } from '../../core/auth.service';
 import { BomService } from '../../core/bom.service';
@@ -28,7 +29,8 @@ import type { ProcurementApproval } from '../../core/types';
     MatInputModule,
     MatSelectModule,
     MatButtonModule,
-    MatIconModule
+    MatIconModule,
+    RouterModule
   ],
   templateUrl: './approvals-inbox.component.html',
   styleUrl: './approvals-inbox.component.scss',
@@ -73,16 +75,16 @@ export class ApprovalsInboxComponent {
         next: (resp) => {
           const items = resp.results || [];
           this.approvals = me ? items.filter((a) => a.approver === me) : items;
-        for (const a of this.approvals) {
-          this.formFor(a.id);
+          for (const a of this.approvals) {
+            this.formFor(a.id);
+          }
+          this.loading = false;
+        },
+        error: (err) => {
+          this.loading = false;
+          this.notify.errorFrom(err, 'Failed to load approvals inbox');
         }
-        this.loading = false;
-      },
-      error: () => {
-        this.loading = false;
-        this.notify.error('Failed to load approvals inbox');
-      }
-    });
+      });
   }
 
   submit(approval: ProcurementApproval): void {
@@ -98,9 +100,45 @@ export class ApprovalsInboxComponent {
       },
       error: (err) => {
         this.savingId = null;
-        this.notify.error(err?.error?.detail || 'Failed to submit decision');
+        this.notify.errorFrom(err, 'Failed to submit decision');
       }
     });
+  }
+
+  approvalBomId(approval: ProcurementApproval): number | null {
+    const raw = approval as unknown as {
+      bom?: number | string | null;
+      bom_id?: number | string | null;
+      request_bom?: number | string | null;
+      request_bom_id?: number | string | null;
+      request?: { bom?: number | string | null | { id?: number | string | null }; bom_id?: number | string | null; id?: number | string | null } | number | string | null;
+    };
+    const nestedRequest = raw.request;
+    const resolveId = (value: unknown): number | null => {
+      if (value === null || typeof value === 'undefined') return null;
+      if (typeof value === 'number') return Number.isFinite(value) ? value : null;
+      if (typeof value === 'string') {
+        const parsed = Number(value);
+        return Number.isFinite(parsed) ? parsed : null;
+      }
+      if (typeof value === 'object') {
+        const idValue = (value as any).id;
+        if (idValue !== undefined) return resolveId(idValue);
+      }
+      return null;
+    };
+
+    const direct =
+      raw.bom ??
+      raw.bom_id ??
+      raw.request_bom ??
+      raw.request_bom_id;
+    const requestBom =
+      typeof nestedRequest === 'object'
+        ? (nestedRequest as any)?.bom ?? (nestedRequest as any)?.bom_id
+        : null;
+
+    return resolveId(direct) ?? resolveId(requestBom);
   }
 }
 

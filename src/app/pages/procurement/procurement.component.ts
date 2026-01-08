@@ -66,9 +66,9 @@ export class ProcurementComponent {
           this.boms = resp.results || [];
           this.loading = false;
         },
-        error: () => {
+        error: (err) => {
           this.loading = false;
-          this.notify.error('Failed to load procurement list');
+          this.notify.errorFrom(err, 'Failed to load procurement list');
         }
       });
   }
@@ -83,9 +83,17 @@ export class ProcurementComponent {
       },
       error: (err) => {
         this.actionId = null;
-        this.notify.error(err?.error?.detail || 'Failed to mark ordered');
+        this.notify.errorFrom(err, 'Failed to mark ordered');
       }
     });
+  }
+
+  canMarkOrdered(b: Bom): boolean {
+    return this.isProcurement() && b.status === 'APPROVED';
+  }
+
+  canReceive(b: Bom): boolean {
+    return this.isProcurement() && (b.status === 'ORDERED' || b.status === 'RECEIVING');
   }
 
   openReceive(b: { id: number }): void {
@@ -100,8 +108,8 @@ export class ProcurementComponent {
         }
         this.receiveForm = this.fb.group(controls);
       },
-      error: () => {
-        this.notify.error('Failed to load BOM items');
+      error: (err) => {
+        this.notify.errorFrom(err, 'Failed to load BOM items');
       }
     });
   }
@@ -141,7 +149,7 @@ export class ProcurementComponent {
       },
       error: (err) => {
         this.actionId = null;
-        this.notify.error(err?.error?.detail || 'Failed to record receipt');
+        this.notify.errorFrom(err, 'Failed to record receipt');
       }
     });
   }

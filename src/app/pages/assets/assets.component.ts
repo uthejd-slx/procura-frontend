@@ -106,9 +106,9 @@ export class AssetsComponent {
           this.hasPrev.set(!!resp.previous);
           this.loading.set(false);
         },
-        error: () => {
+        error: (err) => {
           this.loading.set(false);
-          this.notify.error('Failed to load assets');
+          this.notify.errorFrom(err, 'Failed to load assets');
         }
       });
   }
@@ -177,7 +177,7 @@ export class AssetsComponent {
         this.selected.set(updated);
         this.reload();
       },
-      error: () => this.notify.error('Unable to update asset')
+      error: (err) => this.notify.errorFrom(err, 'Unable to update asset')
     });
   }
 

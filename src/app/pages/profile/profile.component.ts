@@ -85,7 +85,7 @@ export class ProfileComponent {
           ...profile,
           notifications_email_enabled: !!profile.notifications_email_enabled
         }),
-      error: () => this.notify.error('Failed to load profile')
+      error: (err) => this.notify.errorFrom(err, 'Failed to load profile')
     });
   }
 
@@ -97,9 +97,9 @@ export class ProfileComponent {
         this.loading = false;
         this.notify.success('Profile updated');
       },
-      error: () => {
+      error: (err) => {
         this.loading = false;
-        this.notify.error('Failed to update profile');
+        this.notify.errorFrom(err, 'Failed to update profile');
       }
     });
   }

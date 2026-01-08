@@ -87,9 +87,9 @@ export class BomTemplatesComponent {
           }, 6000);
         }
       },
-      error: () => {
+      error: (err) => {
         this.loading = false;
-        this.notify.error('Failed to load templates');
+        this.notify.errorFrom(err, 'Failed to load templates');
       }
     });
   }
@@ -141,7 +141,7 @@ export class BomTemplatesComponent {
       },
       error: (err) => {
         this.deletingId = null;
-        this.notify.error(err?.error?.detail || 'Failed to delete template');
+        this.notify.errorFrom(err, 'Failed to delete template');
       }
     });
   }
@@ -163,7 +163,7 @@ export class BomTemplatesComponent {
       },
       error: (err) => {
         this.creating = false;
-        this.notify.error(err?.error?.detail || 'Failed to create template');
+        this.notify.errorFrom(err, 'Failed to create template');
       }
     });
   }
@@ -205,7 +205,7 @@ export class BomTemplatesComponent {
       },
       error: (err) => {
         this.saving = false;
-        this.notify.error(err?.error?.detail || 'Failed to update template');
+        this.notify.errorFrom(err, 'Failed to update template');
       }
     });
   }

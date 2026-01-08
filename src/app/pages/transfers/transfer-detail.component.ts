@@ -80,9 +80,9 @@ export class TransferDetailComponent {
         this.transfer.set(transfer);
         this.loading.set(false);
       },
-      error: () => {
+      error: (err) => {
         this.loading.set(false);
-        this.notify.error('Failed to load transfer');
+        this.notify.errorFrom(err, 'Failed to load transfer');
       }
     });
   }
@@ -133,7 +133,7 @@ export class TransferDetailComponent {
         this.load(transfer.id);
         this.loadAssets();
       },
-      error: (err) => this.notify.error(err?.error?.detail || 'Unable to add item')
+      error: (err) => this.notify.errorFrom(err, 'Unable to add item')
     });
   }
 
@@ -145,7 +145,7 @@ export class TransferDetailComponent {
         this.transfer.set(updated);
         this.notify.success('Transfer submitted');
       },
-      error: () => this.notify.error('Unable to submit transfer')
+      error: (err) => this.notify.errorFrom(err, 'Unable to submit transfer')
     });
   }
 
@@ -157,7 +157,7 @@ export class TransferDetailComponent {
         this.transfer.set(updated);
         this.notify.success('Transfer approved');
       },
-      error: () => this.notify.error('Unable to approve transfer')
+      error: (err) => this.notify.errorFrom(err, 'Unable to approve transfer')
     });
   }
 
@@ -169,7 +169,7 @@ export class TransferDetailComponent {
         this.transfer.set(updated);
         this.notify.success('Transfer completed');
       },
-      error: () => this.notify.error('Unable to complete transfer')
+      error: (err) => this.notify.errorFrom(err, 'Unable to complete transfer')
     });
   }
 
@@ -181,7 +181,7 @@ export class TransferDetailComponent {
         this.transfer.set(updated);
         this.notify.success('Transfer canceled');
       },
-      error: () => this.notify.error('Unable to cancel transfer')
+      error: (err) => this.notify.errorFrom(err, 'Unable to cancel transfer')
     });
   }
 

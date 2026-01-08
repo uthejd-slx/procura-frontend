@@ -69,8 +69,17 @@ export class BomDetailComponent {
   savingCancel = false;
   deletingBom = false;
   showAddItem = false;
+  editingItemId: number | null = null;
 
-  readonly itemColumns = ['name', 'qty', 'signoff', 'received'];
+  readonly displayItemFields = computed(() => {
+    return this.itemSchemaFields().filter((field) => field.key !== 'name' && field.key !== 'received');
+  });
+
+  readonly itemColumns = computed(() => {
+    const fields = this.displayItemFields().map((field) => field.key);
+    const actions = this.editable() ? ['actions'] : [];
+    return ['name', ...fields, 'signoff', ...actions];
+  });
   readonly itemSchemaFields = computed(() => {
     const fields = this.template()?.schema?.item_fields || [];
     return this.resolveItemFields(fields);
@@ -80,7 +89,7 @@ export class BomDetailComponent {
     const b = this.bom();
     if (!b) return false;
     const editableStatus = b.status === 'DRAFT' || b.status === 'NEEDS_CHANGES';
-    return editableStatus && (this.isOwner() || this.isCollaborator());
+    return editableStatus && (this.isOwner() || this.isCollaborator() || this.auth.hasRole('admin'));
   });
 
   readonly isOwner = computed(() => {
@@ -105,7 +114,20 @@ export class BomDetailComponent {
     const b = this.bom();
     if (!b) return false;
     const userId = this.auth.user$()?.id;
-    return !!userId && (b.owner === userId || this.auth.hasRole('procurement'));
+    const canUser = !!userId && (b.owner === userId || this.auth.hasRole('procurement'));
+    const statusAllowed = b.status === 'DRAFT' || b.status === 'NEEDS_CHANGES' || b.status === 'SIGNOFF_PENDING';
+    return canUser && statusAllowed;
+  });
+
+  readonly showCollaboratorActions = computed(() => this.editable() && this.canManageCollaborators());
+
+  readonly showCollaboratorsSection = computed(() => {
+    const b = this.bom();
+    if (!b) return false;
+    const status = b.status;
+    const readOnly = status === 'SIGNOFF_PENDING' || status === 'APPROVAL_PENDING' || status === 'APPROVED';
+    if (!readOnly) return true;
+    return this.collaborators().length > 0;
   });
 
   readonly canDeleteBom = computed(() => {
@@ -165,7 +187,7 @@ export class BomDetailComponent {
           localStorage.setItem('tutorial.lastBomId', String(b.id));
         }
       },
-      error: () => this.notify.error('Failed to load BOM')
+      error: (err) => this.notify.errorFrom(err, 'Failed to load BOM')
     });
   }
 
@@ -197,7 +219,7 @@ export class BomDetailComponent {
 
   private buildItemSchemaForm(fields: BomTemplateSchemaField[]): FormGroup {
     const controls: Record<string, FormControl<string | boolean | null>> = {};
-    fields
+    this.resolveItemFields(fields)
       .filter((field) => field && field.key)
       .forEach((field) => {
         const validators = field.key === 'name' ? [Validators.required] : [];
@@ -221,9 +243,9 @@ export class BomDetailComponent {
         this.collaborators.set(list || []);
         this.loadingCollaborators.set(false);
       },
-      error: () => {
+      error: (err) => {
         this.loadingCollaborators.set(false);
-        this.notify.error('Failed to load collaborators');
+        this.notify.errorFrom(err, 'Failed to load collaborators');
       }
     });
   }
@@ -251,7 +273,7 @@ export class BomDetailComponent {
       },
       error: (err) => {
         this.savingMeta = false;
-        this.notify.error(err?.error?.detail || 'Save failed');
+        this.notify.errorFrom(err, 'Save failed');
       }
     });
   }
@@ -269,20 +291,28 @@ export class BomDetailComponent {
       return;
     }
     const dataPayload = this.extractSchemaExtras(itemSchemaData);
-    this.bomService.addItem(b.id, {
+    const payload = {
       ...mapped,
       data: dataPayload
-    } as any).subscribe({
+    } as any;
+
+    const request$ = this.editingItemId
+      ? this.bomService.updateItem(this.editingItemId, payload)
+      : this.bomService.addItem(b.id, payload);
+
+    const isEditing = this.editingItemId !== null;
+    request$.subscribe({
       next: () => {
         this.savingItem = false;
         this.showAddItem = false;
+        this.editingItemId = null;
         this.itemSchemaForm.reset({});
         this.reload();
-        this.notify.success('Item added');
+        this.notify.success(isEditing ? 'Item updated' : 'Item added');
       },
       error: (err) => {
         this.savingItem = false;
-        this.notify.error(err?.error?.detail || 'Failed to add item');
+        this.notify.errorFrom(err, 'Failed to save item');
       }
     });
   }
@@ -353,7 +383,7 @@ export class BomDetailComponent {
         },
         error: (err) => {
           this.savingSignoff = false;
-          this.notify.error(err?.error?.detail || 'Failed to request signoff');
+          this.notify.errorFrom(err, 'Failed to request signoff');
         }
       });
   }
@@ -371,7 +401,7 @@ export class BomDetailComponent {
       },
       error: (err) => {
         this.savingApproval = false;
-        this.notify.error(err?.error?.detail || 'Failed to request approval');
+        this.notify.errorFrom(err, 'Failed to request approval');
       }
     });
   }
@@ -389,7 +419,7 @@ export class BomDetailComponent {
       },
       error: (err) => {
         this.savingCancel = false;
-        this.notify.error(err?.error?.detail || 'Cancel failed');
+        this.notify.errorFrom(err, 'Cancel failed');
       }
     });
   }
@@ -407,7 +437,7 @@ export class BomDetailComponent {
       },
       error: (err) => {
         this.deletingBom = false;
-        this.notify.error(err?.error?.detail || 'Failed to delete BOM');
+        this.notify.errorFrom(err, 'Failed to delete BOM');
       }
     });
   }
@@ -421,7 +451,7 @@ export class BomDetailComponent {
         this.loadCollaborators(b.id);
       },
       error: (err) => {
-        this.notify.error(err?.error?.detail || 'Unable to add collaborator');
+        this.notify.errorFrom(err, 'Unable to add collaborator');
       }
     });
   }
@@ -438,7 +468,7 @@ export class BomDetailComponent {
         this.loadCollaborators(b.id);
       },
       error: (err) => {
-        this.notify.error(err?.error?.detail || 'Unable to remove collaborator');
+        this.notify.errorFrom(err, 'Unable to remove collaborator');
       }
     });
   }
@@ -447,6 +477,35 @@ export class BomDetailComponent {
     const currentId = this.auth.user$()?.id;
     if (currentId && currentId === userId) return true;
     return this.canManageCollaborators();
+  }
+
+  canEditItem(item: BomItem): boolean {
+    return this.editable();
+  }
+
+  canDeleteItem(item: BomItem): boolean {
+    return this.editable();
+  }
+
+  editItem(item: BomItem): void {
+    if (!this.canEditItem(item)) return;
+    this.editingItemId = item.id;
+    this.showAddItem = true;
+    this.populateItemSchemaForm(item);
+  }
+
+  deleteItem(item: BomItem): void {
+    if (!this.canDeleteItem(item)) return;
+    if (!confirm(`Delete item "${item.name}"? This cannot be undone.`)) return;
+    this.bomService.deleteItem(item.id).subscribe({
+      next: () => {
+        this.notify.success('Item deleted');
+        this.reload();
+      },
+      error: (err) => {
+        this.notify.errorFrom(err, 'Failed to delete item');
+      }
+    });
   }
 
   availableCollaborators(): DirectoryUser[] {
@@ -460,15 +519,17 @@ export class BomDetailComponent {
   }
 
   private resolveItemFields(fields: BomTemplateSchemaField[]): BomTemplateSchemaField[] {
-    const next = [...fields];
-    const hasKey = (key: string) => next.some((f) => f.key === key);
-    if (!hasKey('name')) {
-      next.unshift({ key: 'name', label: 'Name', type: 'text' });
+    const normalized = (fields || [])
+      .filter((field) => field && field.key)
+      .map((field) => ({
+        ...field,
+        label: field.label || field.key
+      }));
+    const hasName = normalized.some((field) => field.key === 'name');
+    if (!hasName) {
+      normalized.unshift({ key: 'name', label: 'Name', type: 'text' });
     }
-    if (!hasKey('quantity')) {
-      next.push({ key: 'quantity', label: 'Quantity', type: 'number' });
-    }
-    return next;
+    return normalized;
   }
 
   schemaControl(field: BomTemplateSchemaField): FormControl<string | boolean | null> {
@@ -529,6 +590,67 @@ export class BomDetailComponent {
       extra[key] = value;
     });
     return Object.keys(extra).length ? extra : null;
+  }
+
+  itemFieldValue(item: BomItem, field: BomTemplateSchemaField): string {
+    const key = field.key;
+    const baseValue = this.readBaseItemValue(item, key);
+    const value = typeof baseValue !== 'undefined' ? baseValue : item.data?.[key];
+    if (value === null || typeof value === 'undefined' || value === '') return '—';
+    if (typeof value === 'boolean') return value ? 'Yes' : 'No';
+    if (typeof value === 'object') return JSON.stringify(value);
+    return String(value);
+  }
+
+  isLinkField(field: BomTemplateSchemaField): boolean {
+    const type = (field.type || '').toLowerCase();
+    return type === 'url' || field.key === 'link' || field.key === 'url';
+  }
+
+  private readBaseItemValue(item: BomItem, key: string) {
+    switch (key) {
+      case 'name':
+        return item.name;
+      case 'description':
+        return item.description;
+      case 'quantity':
+      case 'qty':
+        return item.quantity;
+      case 'unit':
+        return item.unit;
+      case 'vendor':
+      case 'vendor_name':
+        return item.vendor;
+      case 'category':
+        return item.category;
+      case 'unit_price':
+      case 'price':
+        return item.unit_price;
+      case 'currency':
+        return item.currency;
+      case 'tax_percent':
+      case 'tax':
+        return item.tax_percent;
+      case 'link':
+      case 'url':
+        return item.link;
+      case 'notes':
+        return item.notes;
+      default:
+        return undefined;
+    }
+  }
+
+  private populateItemSchemaForm(item: BomItem): void {
+    const patch: Record<string, any> = {};
+    for (const field of this.itemSchemaFields()) {
+      const baseValue = this.readBaseItemValue(item, field.key);
+      const value = typeof baseValue !== 'undefined' ? baseValue : item.data?.[field.key];
+      if (typeof value !== 'undefined') {
+        patch[field.key] = value;
+      }
+    }
+    this.itemSchemaForm.reset(patch);
   }
 
   download(format: 'pdf' | 'csv' | 'json'): void {

@@ -99,9 +99,9 @@ export class CatalogComponent {
           this.hasPrev.set(!!resp.previous);
           this.loading.set(false);
         },
-        error: () => {
+        error: (err) => {
           this.loading.set(false);
-          this.notify.error('Failed to load catalog items');
+          this.notify.errorFrom(err, 'Failed to load catalog items');
         }
       });
   }
@@ -181,7 +181,7 @@ export class CatalogComponent {
         this.cancelEdit();
         this.reload();
       },
-      error: () => this.notify.error('Unable to save catalog item')
+      error: (err) => this.notify.errorFrom(err, 'Unable to save catalog item')
     });
   }
 
@@ -193,7 +193,7 @@ export class CatalogComponent {
         this.notify.success('Catalog item deleted');
         this.reload();
       },
-      error: () => this.notify.error('Failed to delete catalog item')
+      error: (err) => this.notify.errorFrom(err, 'Failed to delete catalog item')
     });
   }
 

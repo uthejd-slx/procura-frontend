@@ -73,9 +73,9 @@ export class AttachmentsComponent {
           this.attachments.set(resp.results || []);
           this.loading.set(false);
         },
-        error: () => {
+        error: (err) => {
           this.loading.set(false);
-          this.notify.error('Failed to load attachments');
+          this.notify.errorFrom(err, 'Failed to load attachments');
         }
       });
   }
@@ -115,7 +115,7 @@ export class AttachmentsComponent {
           this.selectedFile.set(null);
           this.reload();
         },
-        error: () => this.notify.error('Unable to upload attachment')
+        error: (err) => this.notify.errorFrom(err, 'Unable to upload attachment')
       });
   }
 
@@ -127,7 +127,7 @@ export class AttachmentsComponent {
         this.notify.success('Attachment deleted');
         this.reload();
       },
-      error: () => this.notify.error('Unable to delete attachment')
+      error: (err) => this.notify.errorFrom(err, 'Unable to delete attachment')
     });
   }
 }

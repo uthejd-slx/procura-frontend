@@ -94,9 +94,9 @@ export class BillDetailComponent {
         this.loading.set(false);
         this.loadAttachments(id);
       },
-      error: () => {
+      error: (err) => {
         this.loading.set(false);
-        this.notify.error('Failed to load bill');
+        this.notify.errorFrom(err, 'Failed to load bill');
       }
     });
   }
@@ -127,7 +127,7 @@ export class BillDetailComponent {
         this.bill.set(updated);
         this.notify.success('Bill updated');
       },
-      error: (err) => this.notify.error(err?.error?.detail || 'Unable to update bill')
+      error: (err) => this.notify.errorFrom(err, 'Unable to update bill')
     });
   }
 
@@ -149,7 +149,7 @@ export class BillDetailComponent {
         this.selectedFile.set(null);
         this.loadAttachments(bill.id);
       },
-      error: (err) => this.notify.error(err?.error?.detail || 'Unable to upload attachment')
+      error: (err) => this.notify.errorFrom(err, 'Unable to upload attachment')
     });
   }
 
@@ -162,7 +162,7 @@ export class BillDetailComponent {
         const bill = this.bill();
         if (bill) this.loadAttachments(bill.id);
       },
-      error: () => this.notify.error('Unable to delete attachment')
+      error: (err) => this.notify.errorFrom(err, 'Unable to delete attachment')
     });
   }
 }

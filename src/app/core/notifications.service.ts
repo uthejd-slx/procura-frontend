@@ -11,6 +11,8 @@ export class NotificationsService {
   private readonly baseUrl = inject(API_BASE_URL);
   private readonly _unreadCount = signal(0);
   readonly unreadCount = this._unreadCount.asReadonly();
+  private readonly _incomingTick = signal(0);
+  readonly incomingTick = this._incomingTick.asReadonly();
 
   list(params?: Record<string, string | number | boolean | string[] | null | undefined>) {
     return this.http.get<PaginatedResponse<ApiNotification>>(`${this.baseUrl}/notifications/`, {
@@ -33,6 +35,10 @@ export class NotificationsService {
 
   setUnreadCount(count: number): void {
     this._unreadCount.set(Math.max(0, count));
+  }
+
+  notifyIncoming(): void {
+    this._incomingTick.update((tick) => tick + 1);
   }
 
   clearUnread(): void {
