@@ -61,7 +61,7 @@ export class BomService {
   }
 
   updateItem(itemId: number, payload: Partial<BomItem> & { name?: string }) {
-    return this.http.patch<BomItem>(`${this.baseUrl}/bom-items/${itemId}/`, payload);
+    return this.http.put<BomItem>(`${this.baseUrl}/bom-items/${itemId}/`, payload);
   }
 
   deleteItem(itemId: number) {
