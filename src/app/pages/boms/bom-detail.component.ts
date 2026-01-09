@@ -526,8 +526,18 @@ export class BomDetailComponent {
         label: field.label || field.key
       }));
     const hasName = normalized.some((field) => field.key === 'name');
+    const hasQty = normalized.some((field) => field.key === 'quantity' || field.key === 'qty');
     if (!hasName) {
       normalized.unshift({ key: 'name', label: 'Name', type: 'text' });
+    }
+    if (!hasQty) {
+      const insertIndex = normalized.findIndex((field) => field.key === 'name');
+      const qtyField: BomTemplateSchemaField = { key: 'quantity', label: 'Qty', type: 'number' };
+      if (insertIndex >= 0) {
+        normalized.splice(insertIndex + 1, 0, qtyField);
+      } else {
+        normalized.unshift(qtyField);
+      }
     }
     return normalized;
   }
